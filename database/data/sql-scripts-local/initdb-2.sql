@@ -1,0 +1,85 @@
+-- Consultants
+INSERT INTO Consultant (Email, First_Name, Last_Name, Password, Default_Query) VALUES ('fh@techchapter.com', 'Frederik', 'Hansen', 'password1', null);
+INSERT INTO Consultant (Email, First_Name, Last_Name, Password, Default_Query) VALUES ('nv@techchapter.com', 'Nikolaj', 'Vølver', 'password2', null);
+INSERT INTO Consultant (Email, First_Name, Last_Name, Password, Default_Query) VALUES ('jgc@techchapter.com', 'Jamie', 'Callan', 'password3', null);
+
+-- Customers
+INSERT INTO Customer (Name) VALUES ('LEGO');
+INSERT INTO Customer (Name) VALUES ('Nets');
+INSERT INTO Customer (Name) VALUES ('Novo Nordisk');
+INSERT INTO Customer (Name) VALUES ('Statens IT');
+INSERT INTO Customer (Name) VALUES ('TopDanmark');
+INSERT INTO Customer (Name) VALUES ('Zoles');
+INSERT INTO Customer (Name) VALUES ('Danske Bank');
+INSERT INTO Customer (Name) VALUES ('Carlsberg');
+INSERT INTO Customer (Name) VALUES ('Maersk');
+INSERT INTO Customer (Name) VALUES ('Vestas');
+
+-- Linking Consultants with Customers
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 1);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 2);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 3);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 4);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 5);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 6);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 3);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 4);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 5);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 6);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 1);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 2);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 3);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 4);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 5);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 6);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 7);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 8);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 9);
+INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 10);
+
+-- Time Registrations
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-01-01', 1);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (2, '2024-01-02', 2);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-15', 3);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-16', 4);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-17', 5);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-18', 6);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-19', 7);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-02-20', 8);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-21', 9);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-22', 10);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-02-23', 11);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-24', 12);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-02-25', 13);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-26', 14);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-27', 15);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (8, '2024-02-28', 16);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2023-12-10', 1);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2023-12-15', 2);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2023-12-20', 3);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2023-12-25', 4);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2023-12-30', 5);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-01-05', 6);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-01-10', 7);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (8, '2024-01-15', 8);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-01-20', 9);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-01-25', 10);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-01-30', 11);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-05', 12);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-02-10', 13);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-15', 14);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-02-20', 15);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-25', 16);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-03-01', 1);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (8, '2024-03-05', 2);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-03-10', 3);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-03-15', 4);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-03-20', 5);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-03-25', 6);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-03-30', 7);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-04-05', 8);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-04-10', 9);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-04-15', 10);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-04-20', 11);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-04-25', 12);
+INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-04-30', 13);

@@ -1,0 +1,108 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Authentication;
+using System.Security.Claims;
+using System.Text;
+using Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Persistence;
+using Shared;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
+
+namespace Service.Login;
+
+public class LoginService : ILoginService
+{
+    private readonly IConfiguration _configuration;
+    private readonly PunchlogDbContext _dbContext;
+
+    public LoginService(IConfiguration configuration, PunchlogDbContext dbContext)
+    {
+        _configuration = configuration;
+        _dbContext = dbContext;
+    }
+
+    public async Task<string> AuthorizeLogin(string email, string password)
+    {
+        var consultant = await _dbContext.Consultants
+            .Where(c => c.Email == email && c.Password == password)
+            .Select(c => new ConsultantDto
+            {
+                Id = c.Id,
+                Email = c.Email
+            })
+            .FirstOrDefaultAsync();
+
+        if (consultant != null)
+        {
+            var token = GenerateJwtToken(consultant);
+            return token;
+        }
+
+        throw new ArgumentException("Invalid Username/Password");
+    }
+
+    private string GenerateJwtToken(ConsultantDto consultant)
+    {
+        var jwtSigningCert = _configuration["JWT_KEY"];
+        if (string.IsNullOrEmpty(jwtSigningCert))
+        {
+            throw new InvalidOperationException("JWT Key is missing in the configuration.");
+        }
+        var signingCert = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningCert));
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Email, consultant.Email),
+            new Claim(JwtRegisteredClaimNames.NameId, consultant.Id.ToString()),
+            // Add other claims as needed
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["JWT_ISSUER"],
+            audience: _configuration["JWT_AUDIENCE"],
+            claims: claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: new SigningCredentials(signingCert, SecurityAlgorithms.HmacSha256)
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public async Task<ConsultantDto> ValidateToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var signingCert = _configuration["JWT_KEY"];
+        if (string.IsNullOrEmpty(signingCert))
+        {
+            throw new Exception("Encryption key was null");
+        }
+
+        var key = Encoding.ASCII.GetBytes(signingCert);
+        try
+        {
+            tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
+            }, out SecurityToken validatedToken);
+
+            var jwtToken = (JwtSecurityToken)validatedToken;
+            var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
+            var user = await _dbContext.Consultants.Where(c => c.Id == userId).Select(c => new ConsultantDto
+            {
+                Email = c.Email,
+                Id = c.Id
+            }).FirstOrDefaultAsync();
+            return user ?? throw new AuthenticationException("Error validating user");
+        }
+        catch
+        {
+            throw new AuthenticationException("Please login again");
+        }
+    }
+}

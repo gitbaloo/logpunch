@@ -101,10 +101,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var connectionString = builder.Configuration.GetConnectionString("PunchlogDb");
+var connectionString = builder.Configuration.GetConnectionString("LogpunchDb");
 Console.WriteLine($"Connection string: {connectionString}");
 
-builder.Services.AddDbContext<PunchlogDbContext>(options =>
+builder.Services.AddDbContext<LogpunchDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 var app = builder.Build();

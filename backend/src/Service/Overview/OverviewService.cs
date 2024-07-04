@@ -8,7 +8,7 @@ using Shared;
 
 namespace Infrastructure.Overview;
 
-public class OverviewService(PunchlogDbContext dbContext, ILoginService loginService) : IOverviewService
+public class OverviewService(LogpunchDbContext dbContext, ILoginService loginService) : IOverviewService
 {
     public async Task<OverviewResponse> OverviewQuery(string token, bool sortAsc, bool showDaysWithNoRecords,
         bool setDefault, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,

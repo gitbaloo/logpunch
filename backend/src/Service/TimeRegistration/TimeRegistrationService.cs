@@ -6,9 +6,9 @@ namespace Infrastructure;
 
 public class TimeRegistrationService : ITimeRegistrationService
 {
-    private readonly PunchlogDbContext _dbContext;
+    private readonly LogpunchDbContext _dbContext;
 
-    public TimeRegistrationService(PunchlogDbContext dbContext)
+    public TimeRegistrationService(LogpunchDbContext dbContext)
     {
         _dbContext = dbContext;
     }

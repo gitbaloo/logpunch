@@ -5,7 +5,7 @@ using Shared;
 
 namespace Infrastructure.Customer;
 
-public class CustomerService(PunchlogDbContext dbContext) : ICustomerService
+public class CustomerService(LogpunchDbContext dbContext) : ICustomerService
 {
 
     /// <summary>

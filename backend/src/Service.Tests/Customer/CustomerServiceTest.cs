@@ -14,16 +14,16 @@ namespace Service.Tests.Customer;
 [TestSubject(typeof(CustomerService))]
 public class CustomerServiceTest
 {
-    private readonly PunchlogDbContext _dbContext;
+    private readonly LogpunchDbContext _dbContext;
     private readonly CustomerService _service;
 
     public CustomerServiceTest()
     {
-        var options = new DbContextOptionsBuilder<PunchlogDbContext>()
+        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
             .Options;
 
-        _dbContext = new PunchlogDbContext(options);
+        _dbContext = new LogpunchDbContext(options);
 
         _service = new CustomerService(_dbContext);
 

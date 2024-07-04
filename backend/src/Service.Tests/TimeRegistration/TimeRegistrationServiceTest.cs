@@ -14,7 +14,7 @@ namespace Service.Tests.TimeRegistration;
 public class TimeRegistrationServiceTest
 {
     private readonly TimeRegistrationService _service;
-    private readonly PunchlogDbContext _dbContext;
+    private readonly LogpunchDbContext _dbContext;
 
     /**
      * Constructor for the test class that creates a new in-memory database for each test case
@@ -23,11 +23,11 @@ public class TimeRegistrationServiceTest
      */
     public TimeRegistrationServiceTest()
     {
-        var options = new DbContextOptionsBuilder<PunchlogDbContext>()
+        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
             .Options;
 
-        _dbContext = new PunchlogDbContext(options);
+        _dbContext = new LogpunchDbContext(options);
 
         _service = new TimeRegistrationService(_dbContext);
 

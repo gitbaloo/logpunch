@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Persistence;
 
-public class PunchlogDbContext(DbContextOptions<PunchlogDbContext> options) : DbContext(options)
+public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : DbContext(options)
 {
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<TimeRegistration> TimeRegistrations => Set<TimeRegistration>();

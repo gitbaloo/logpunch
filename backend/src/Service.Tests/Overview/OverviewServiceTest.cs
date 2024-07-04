@@ -19,17 +19,17 @@ namespace Service.Tests.Overview;
 public class OverviewServiceTest
 {
     private readonly OverviewService _service;
-    private readonly PunchlogDbContext _dbContext;
+    private readonly LogpunchDbContext _dbContext;
     private readonly ILoginService _loginService;
     private Task<string> token;
 
     public OverviewServiceTest()
     {
-        var options = new DbContextOptionsBuilder<PunchlogDbContext>()
+        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
             .Options;
 
-        _dbContext = new PunchlogDbContext(options);
+        _dbContext = new LogpunchDbContext(options);
 
         var mockToken = "mockedBearerToken";
 

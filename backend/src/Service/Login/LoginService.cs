@@ -15,9 +15,9 @@ namespace Service.Login;
 public class LoginService : ILoginService
 {
     private readonly IConfiguration _configuration;
-    private readonly PunchlogDbContext _dbContext;
+    private readonly LogpunchDbContext _dbContext;
 
-    public LoginService(IConfiguration configuration, PunchlogDbContext dbContext)
+    public LoginService(IConfiguration configuration, LogpunchDbContext dbContext)
     {
         _configuration = configuration;
         _dbContext = dbContext;

@@ -1,5 +1,5 @@
 FROM node:20 as build
-WORKDIR /punchlog/frontend/
+WORKDIR /logpunch/frontend/
 
 COPY package.json .
 
@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 FROM nginx:stable-alpine
-COPY --from=build /punchlog/frontend/build /usr/share/nginx/html
+COPY --from=build /logpunch/frontend/build /usr/share/nginx/html
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8080

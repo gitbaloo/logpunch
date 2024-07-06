@@ -1,0 +1,13 @@
+services:
+  backend:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: backend
+    volumes:
+      - .:/logpunch
+    working_dir: /logpunch/src/Server
+    command: ["dotnet", "run", "dev"]
+    ports:
+      - "7206:7206"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:7206

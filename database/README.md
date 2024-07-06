@@ -2,13 +2,11 @@
 
 ![Database Skema](../database/resources/database.png)
 
-Run the punchlogDb.ddl to create the tables and assign foreign keys.
-<br>
-`testdata.sql` can be used to creates dummy consultant, client, timeregistration and favorites.
+## How to run the database
 
-## How to run Database
+Make sure you have docker installed on your machine
 
-navigate to `datebase/Data` and run following docker command:
+navigate to 'database/Data' and run this docker command:
 
 ```
 docker compose up -d

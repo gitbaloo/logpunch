@@ -5,8 +5,8 @@
             "Group": "Servers",
             "Host": "database",
             "Port": 5432,
-            "MaintenanceDB": "postgres",
-            "Username": "${POSTGRES_USER}",
+            "MaintenanceDB": "logpunchdb",
+            "Username": "logpunchuser",
             "SSLMode": "prefer",
             "PassFile": "/pgpassfile"
         }

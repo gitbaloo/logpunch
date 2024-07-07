@@ -5,9 +5,19 @@ services:
     volumes:
       - .:/logpunch
     working_dir: /logpunch/src/Server
-    command: ["dotnet", "run", "dev"]
+    command: ["dotnet", "run", "--urls", "http://*:7206"]
     ports:
       - "7206:7206"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:7206
+      - ASPNETCORE_URLS=http://localhost:7206
+      - JWT_KEY=8e73b388-707e-49cf-912d-334c988af3e0
+      - JWT_ISSUER=logpunch
+      - JWT_AUDIENCE=Audience
+      - ConnectionStrings__LogpunchDb=Host=database;Database=logpunchdb;Username=logpunchuser;Password=logpunch1234
+    networks:
+      - pgnetwork
+
+networks:
+  pgnetwork:
+    external: true

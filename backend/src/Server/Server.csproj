@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>logpunch</RootNamespace>
-      <UserSecretsId>3aca7e5b-3cd2-4dab-8390-7db0ae6ae5ab</UserSecretsId>
+      <UserSecretsId>8e73b388-707e-49cf-912d-334c988af3e0</UserSecretsId>
   </PropertyGroup>
 
     <ItemGroup>

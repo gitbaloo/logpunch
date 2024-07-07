@@ -1,11 +1,27 @@
 # Running the solution in dev mode
 
+## Linux / WSL
+
 Simply run the script called 'launch.sh' in the root folder.
 
-Open a terminal, change the directory to where 'logpunch' is on your machine and type:
+Open a terminal, change the directory to where 'logpunch' is on your machine and use this command:
 
 ```
 ./launch.sh
+```
+
+## Windows
+
+Make sure you can execute PowerShell scripts.
+
+```
+Set-ExecutionPolicy RemoteSigned
+```
+
+Open your terminal, change the directory to where 'logpunch' is on your machine and use this command:
+
+```
+.\launch.ps1
 ```
 
 # Accessing the solution

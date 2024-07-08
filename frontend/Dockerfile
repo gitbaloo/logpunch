@@ -1,17 +1,34 @@
-FROM node:20 as build
-WORKDIR /logpunch/frontend/
+# Use an official image as a base
+FROM debian:bullseye-slim
 
-COPY package.json .
+# Install curl
+RUN apt-get update && apt-get install -y curl
 
+# Install Node.js 22.4.0
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs
+
+# Verify the installation
+RUN node -v
+RUN npm -v
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the package.json and package-lock.json files
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
+# Copy the rest of the application code
 COPY . .
 
-RUN npm run build
+# Copy the environment file for Docker
+COPY .env.docker .env
 
-FROM nginx:stable-alpine
-COPY --from=build /logpunch/frontend/build /usr/share/nginx/html
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# Expose the port Vite uses
+EXPOSE 5173
 
-EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+# Command to run the application
+CMD ["npm", "run", "dev"]

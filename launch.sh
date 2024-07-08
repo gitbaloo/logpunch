@@ -7,11 +7,8 @@ export JWT_AUDIENCE="Audience"
 export CONNECTION_STRING="Host=localhost:5433;Database=logpunchdb;Username=logpunchuser;Password=logpunch1234"
 
 # Kill processes using ports 7206 (backend), 5173 (frontend), and any relevant docker ports
-kill -9 $(lsof -t -i:5017) 2> /dev/null
-kill -9 $(lsof -t -i:7206) 2> /dev/null
 kill -9 $(lsof -t -i:5173) 2> /dev/null
-kill -9 $(lsof -t -i:5433) 2> /dev/null
-kill -9 $(lsof -t -i:8081) 2> /dev/null
+
 
 # Get the directory of the script
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
@@ -29,13 +26,13 @@ change_directory() {
 # Start the backend
 echo "Starting backend..."
 change_directory "$SCRIPT_DIR/backend/src/Server/"
-dotnet run dev &
+docker compose up &
 BACKEND_PID=$!
 
 # Start the frontend
 echo "Starting frontend..."
 change_directory "$SCRIPT_DIR/frontend/"
-npm run dev &
+docker compose up &
 FRONTEND_PID=$!
 
 # Start the database

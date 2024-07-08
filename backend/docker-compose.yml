@@ -3,8 +3,8 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:8.0
     container_name: backend
     volumes:
-      - .:/logpunch
-    working_dir: /logpunch/src/Server
+      - .:/logpunch/backend
+    working_dir: /logpunch/backend/src/Server
     command: ["dotnet", "run", "--urls", "http://*:7206"]
     ports:
       - "7206:7206"

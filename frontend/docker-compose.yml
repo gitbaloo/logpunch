@@ -1,0 +1,22 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_APP_ENV=docker
+    networks:
+      - pgnetwork
+
+networks:
+  pgnetwork:
+    external: true

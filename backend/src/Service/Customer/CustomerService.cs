@@ -14,11 +14,11 @@ public class CustomerService(LogpunchDbContext dbContext) : ICustomerService
     /// <param name="dbEntry">All Consultant Customers in the database</param>
     /// <param name="consultantId">The consultant id</param>
     /// <returns>Amount of time registrations</returns>
-    public async Task<List<int>> GetMostRecent(IQueryable<ConsultantCustomer> dbEntry)
+    public async Task<List<int>> GetMostRecent(IQueryable<EmployeeClientRelation> dbEntry)
     {
-        var recentActivities = await dbContext.TimeRegistrations
-            .Where(tr => dbEntry.Any(cc => cc.Id == tr.ConsultantCustomerId))
-            .GroupBy(tr => tr.ConsultantCustomerId)
+        var recentActivities = await dbContext.Registrations
+            .Where(tr => dbEntry.Any(cc => cc.Id == tr.LogpunchTask))
+            .GroupBy(tr => tr.LogpunchTask)
             .Select(g => new
             {
                 ConsultantCustomerId = g.Key,
@@ -39,11 +39,11 @@ public class CustomerService(LogpunchDbContext dbContext) : ICustomerService
     /// </summary>
     /// <param name="consultantId">The consultant id</param>
     /// <returns>A list of customers</returns>
-    public async Task<List<CustomerDto>> GetCustomers(int consultantId)
+    public async Task<List<LogpunchClientDto>> GetCustomers(int consultantId)
     {
-        var consultantCustomerIdsByRecentActivity = await GetMostRecent(dbContext.ConsultantCustomers);
+        var consultantCustomerIdsByRecentActivity = await GetMostRecent(dbContext.EmployeeClientRelations);
 
-        var consultantCustomers = await dbContext.ConsultantCustomers
+        var consultantCustomers = await dbContext.EmployeeClientRelations
             .Where(cc => cc.ConsultantId == consultantId)
             .Include(cc => cc.Customer)
             .ToListAsync();
@@ -52,16 +52,16 @@ public class CustomerService(LogpunchDbContext dbContext) : ICustomerService
             .OrderByDescending(cc => cc.Favorite)
             .ThenByDescending(cc => cc.ConsultantId == consultantCustomerIdsByRecentActivity.IndexOf(cc.Id))
             .ThenBy(cc => cc.Customer!.Name)
-            .Select(cc => new CustomerDto
+            .Select(cc => new LogpunchClientDto
             {
                 Id = cc.Customer!.Id,
                 Name = cc.Customer.Name
             })
             .ToList();
 
-        var allCustomersExcludingConsultant = await dbContext.Customers
-            .Where(c => c.ConsultantCustomers != null && c.ConsultantCustomers.All(cc => cc.ConsultantId != consultantId))
-            .Select(c => new CustomerDto
+        var allCustomersExcludingConsultant = await dbContext.Clients
+            .Where(c => c.EmployeeClientRelations != null && c.EmployeeClientRelations.All(cc => cc.ConsultantId != consultantId))
+            .Select(c => new LogpunchClientDto
             {
                 Id = c.Id,
                 Name = c.Name

@@ -5,19 +5,19 @@ namespace Persistence;
 
 public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : DbContext(options)
 {
-    public DbSet<Customer> Customers => Set<Customer>();
-    public DbSet<TimeRegistration> TimeRegistrations => Set<TimeRegistration>();
-    public DbSet<Consultant> Consultants => Set<Consultant>();
+    public DbSet<LogpunchClient> Clients => Set<LogpunchClient>();
+    public DbSet<LogpunchRegistration> Registrations => Set<LogpunchRegistration>();
+    public DbSet<LogpunchUser> Users => Set<LogpunchUser>();
 
-    public DbSet<ConsultantCustomer> ConsultantCustomers => Set<ConsultantCustomer>();
+    public DbSet<EmployeeClientRelation> EmployeeClientRelations => Set<EmployeeClientRelation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Customer>(entity =>
+        modelBuilder.Entity<LogpunchClient>(entity =>
         {
-            entity.ToTable("customer");
+            entity.ToTable("logpunch_clients");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name)
@@ -26,9 +26,55 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
                 .IsRequired();
         });
 
-        modelBuilder.Entity<Consultant>(entity =>
+        modelBuilder.Entity<EmployeeClientRelation>(entity =>
         {
-            entity.ToTable("consultant");
+            entity.ToTable("logpunch_employee_client_relations");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.EmployeeId).HasColumnName("employeeid");
+            entity.Property(e => e.ClientId).HasColumnName("clientid");
+
+            entity.HasOne(cc => cc.Employee)
+                .WithMany(c => c.EmployeeClientRelations)
+                .HasForeignKey(cc => cc.EmployeeId);
+
+            entity.HasOne(cc => cc.Client)
+                .WithMany(c => c.EmployeeClientRelations)
+                .HasForeignKey(cc => cc.ClientId);
+        });
+
+        modelBuilder.Entity<LogpunchRegistration>(entity =>
+        {
+            entity.ToTable("logpunch_registrations");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasColumnName("amount")
+                .IsRequired();
+            entity.Property(e => e.Start).HasColumnName("registration_start")
+                .IsRequired();
+            entity.Property(e => e.End).HasColumnName("registration_end")
+                .IsRequired(false);
+            entity.Property(e => e.CreatedById).HasColumnName("created_by_id")
+                .IsRequired();
+            entity.Property(e => e.ClientId).HasColumnName("clientid")
+                .IsRequired(false);
+            entity.Property(e => e.CreationTime).HasColumnName("creation_time")
+                .IsRequired();
+            entity.Property(e => e.Status).HasColumnName("status_type")
+                .IsRequired();
+            entity.Property(e => e.InternalComment).HasColumnName("internal_comment")
+                .IsRequired(false);
+            entity.Property(e => e.ExternalComment).HasColumnName("external_comment")
+                .IsRequired(false);
+            entity.Property(e => e.CorrectionOfId).HasColumnName("correction_of_id")
+                .IsRequired(false);
+        });
+
+        modelBuilder.Entity<LogpunchUser>(entity =>
+        {
+            entity.ToTable("logpunch_users");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.HasKey(e => e.Id);
@@ -44,37 +90,13 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
             entity.Property(e => e.DefaultQuery).HasColumnName("default_query")
                 .HasMaxLength(255)
                 .IsRequired(false);
+            entity.Property(e => e.Role).HasColumnName("role")
+                .HasMaxLength(50)
+                .IsRequired();
         });
 
-        modelBuilder.Entity<TimeRegistration>(entity =>
-            {
-                entity.ToTable("time_registration");
-                entity.Property(e => e.Id).HasColumnName("id");
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.RegistrationDate).HasColumnType("registration_date");
-                entity.Property(e => e.Hours).HasColumnName("hours");
-                entity.Property(e => e.ConsultantCustomerId).HasColumnName("consultant_customerid");
-            }
-        );
 
-        modelBuilder.Entity<ConsultantCustomer>(entity =>
-        {
-            entity.ToTable("consultant_customer");
 
-            entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ConsultantId).HasColumnName("consultantid");
-            entity.Property(e => e.CustomerId).HasColumnName("customerid");
-            entity.Property(e => e.Favorite).HasColumnName("favorite");
-
-            entity.HasOne(cc => cc.Consultant)
-                .WithMany(c => c.ConsultantCustomers)
-                .HasForeignKey(cc => cc.ConsultantId);
-
-            entity.HasOne(cc => cc.Customer)
-                .WithMany(c => c.ConsultantCustomers)
-                .HasForeignKey(cc => cc.CustomerId);
-        });
     }
 }

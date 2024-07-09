@@ -33,7 +33,7 @@ public class OverviewServiceTest
 
         var mockToken = "mockedBearerToken";
 
-        var mockConsultant = new ConsultantDto
+        var mockConsultant = new LogpunchUserDto
         {
             Id = 1,
             Email = "fh@techchapter.com"

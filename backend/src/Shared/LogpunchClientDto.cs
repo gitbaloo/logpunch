@@ -1,11 +1,11 @@
 ﻿namespace Shared;
 
-public class CustomerDto
+public class LogpunchClientDto
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; }
 
-    public CustomerDto()
+    public LogpunchClientDto()
     {
         Name = "";
     }

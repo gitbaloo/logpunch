@@ -25,9 +25,9 @@ public class LoginService : ILoginService
 
     public async Task<string> AuthorizeLogin(string email, string password)
     {
-        var consultant = await _dbContext.Consultants
+        var consultant = await _dbContext.Users
             .Where(c => c.Email == email && c.Password == password)
-            .Select(c => new ConsultantDto
+            .Select(c => new LogpunchUserDto
             {
                 Id = c.Id,
                 Email = c.Email
@@ -43,7 +43,7 @@ public class LoginService : ILoginService
         throw new ArgumentException("Invalid Username/Password");
     }
 
-    private string GenerateJwtToken(ConsultantDto consultant)
+    private string GenerateJwtToken(LogpunchUserDto consultant)
     {
         var jwtSigningCert = _configuration["JWT_KEY"];
         if (string.IsNullOrEmpty(jwtSigningCert))
@@ -70,7 +70,7 @@ public class LoginService : ILoginService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public async Task<ConsultantDto> ValidateToken(string token)
+    public async Task<LogpunchUserDto> ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var signingCert = _configuration["JWT_KEY"];
@@ -93,7 +93,7 @@ public class LoginService : ILoginService
 
             var jwtToken = (JwtSecurityToken)validatedToken;
             var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
-            var user = await _dbContext.Consultants.Where(c => c.Id == userId).Select(c => new ConsultantDto
+            var user = await _dbContext.Users.Where(c => c.Id == userId).Select(c => new LogpunchUserDto
             {
                 Email = c.Email,
                 Id = c.Id

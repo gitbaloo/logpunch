@@ -131,7 +131,7 @@ public class OverviewService(LogpunchDbContext dbContext, ILoginService loginSer
     {
         var user = await loginService.ValidateToken(token);
 
-        var consultant = await dbContext.Consultants.FirstOrDefaultAsync(c => c.Id == user.Id);
+        var consultant = await dbContext.Users.FirstOrDefaultAsync(c => c.Id == user.Id);
 
         if (consultant is null)
         {
@@ -345,18 +345,18 @@ public class OverviewService(LogpunchDbContext dbContext, ILoginService loginSer
         }
     }
 
-    private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, ConsultantDto user, DateTime utcStartDate,
+    private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUserDto user, DateTime utcStartDate,
         DateTime utcEndDate, bool showDaysWithNoRecords)
     {
         List<GroupByObject> result = new List<GroupByObject>();
 
-        var consultantCustomerIds = await dbContext.ConsultantCustomers
+        var consultantCustomerIds = await dbContext.EmployeeClientRelations
             .Where(cc => cc.ConsultantId == user.Id)
             .Select(cc => cc.Id)
             .ToListAsync();
 
-        var rawData = await dbContext.TimeRegistrations
-            .Where(tr => consultantCustomerIds.Contains(tr.ConsultantCustomerId)
+        var rawData = await dbContext.Registrations
+            .Where(tr => consultantCustomerIds.Contains(tr.LogpunchTask)
                          && tr.RegistrationDate >= utcStartDate
                          && tr.RegistrationDate <= utcEndDate)
             .OrderBy(tr => tr.RegistrationDate).Select(tr => new
@@ -370,9 +370,9 @@ public class OverviewService(LogpunchDbContext dbContext, ILoginService loginSer
         {
             case "day":
 
-                result = await dbContext.TimeRegistrations
-                .Join(dbContext.ConsultantCustomers,
-                    tr => tr.ConsultantCustomerId,
+                result = await dbContext.Registrations
+                .Join(dbContext.EmployeeClientRelations,
+                    tr => tr.LogpunchTask,
                     cc => cc.Id,
                     (tr, cc) => new { tr, cc })
                 .Where(joined => consultantCustomerIds.Contains(joined.cc.Id)
@@ -459,12 +459,12 @@ public class OverviewService(LogpunchDbContext dbContext, ILoginService loginSer
                 break;
             case "client":
 
-                result = await dbContext.TimeRegistrations
-                .Join(dbContext.ConsultantCustomers,
-                    tr => tr.ConsultantCustomerId,
+                result = await dbContext.Registrations
+                .Join(dbContext.EmployeeClientRelations,
+                    tr => tr.LogpunchTask,
                     cc => cc.Id,
                     (tr, cc) => new { tr, cc })
-                .Join(dbContext.Customers,
+                .Join(dbContext.Clients,
                     joined => joined.cc.CustomerId,
                     c => c.Id,
                     (joined, c) => new { joined.tr, joined.cc, c })
@@ -557,7 +557,7 @@ public class OverviewService(LogpunchDbContext dbContext, ILoginService loginSer
 
         var user = await loginService.ValidateToken(token);
 
-        var consultant = await dbContext.Consultants.FirstOrDefaultAsync(c => c.Id == user.Id);
+        var consultant = await dbContext.Users.FirstOrDefaultAsync(c => c.Id == user.Id);
 
         if (consultant is null)
         {

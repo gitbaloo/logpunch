@@ -5,5 +5,5 @@ namespace Infrastructure.Customer;
 
 public interface ICustomerService
 {
-    Task<List<CustomerDto>> GetCustomers(int consultantId);
+    Task<List<LogpunchClientDto>> GetCustomers(int consultantId);
 }

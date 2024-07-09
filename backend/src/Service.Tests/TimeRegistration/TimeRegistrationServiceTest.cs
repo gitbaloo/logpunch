@@ -10,10 +10,10 @@ using static Service.Tests.TestUtilities;
 
 namespace Service.Tests.TimeRegistration;
 
-[TestSubject(typeof(TimeRegistrationService))]
+[TestSubject(typeof(RegistrationService))]
 public class TimeRegistrationServiceTest
 {
-    private readonly TimeRegistrationService _service;
+    private readonly RegistrationService _service;
     private readonly LogpunchDbContext _dbContext;
 
     /**
@@ -29,7 +29,7 @@ public class TimeRegistrationServiceTest
 
         _dbContext = new LogpunchDbContext(options);
 
-        _service = new TimeRegistrationService(_dbContext);
+        _service = new RegistrationService(_dbContext);
 
         var consultants = AddTestConsultants();
         var customers = AddTestCustomers();
@@ -49,14 +49,14 @@ public class TimeRegistrationServiceTest
         const double expected = 2.0;
         var expectedCustomer = "TestCompany1";
 
-        var customer = await _dbContext.Customers.FirstOrDefaultAsync(customer => customer.Id == 1);
+        var customer = await _dbContext.Clients.FirstOrDefaultAsync(customer => customer.Id == 1);
         if (customer is null)
         {
             Assert.Fail("Customer was null");
             return;
         }
 
-        var consultant = await _dbContext.Consultants.FirstOrDefaultAsync(consultant => consultant.Id == 1);
+        var consultant = await _dbContext.Users.FirstOrDefaultAsync(consultant => consultant.Id == 1);
         if (consultant is null)
         {
             Assert.Fail("Consultant was null");
@@ -65,10 +65,10 @@ public class TimeRegistrationServiceTest
 
 
         var consultantCustomer1 = new ConsultantCustomer(consultant, customer);
-        _dbContext.ConsultantCustomers.Add(consultantCustomer1);
+        _dbContext.EmployeeClientRelations.Add(consultantCustomer1);
         await _dbContext.SaveChangesAsync();
 
-        var consultantCustomer = await _dbContext.ConsultantCustomers
+        var consultantCustomer = await _dbContext.EmployeeClientRelations
             .Include(cc => cc.Customer)
             .FirstAsync();
 
@@ -90,7 +90,7 @@ public class TimeRegistrationServiceTest
         var expectedDate = DateTime.Today.Date;
 
         // Act
-        var timeRegistration = await _service.RegisterTime(1, 2, 3);
+        var timeRegistration = await _service.CreateRegistration(1, 2, 3);
         var actualDate = timeRegistration.RegistrationDate.Date;
 
         // Assert

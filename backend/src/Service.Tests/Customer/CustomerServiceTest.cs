@@ -57,9 +57,9 @@ public class CustomerServiceTest
         var hours = 3;
         var consultantId = 2;
         var consultantCustomerId = 3;
-        Domain.TimeRegistration time = new Domain.TimeRegistration(hours, consultantCustomerId);
+        Domain.LogpunchRegistration time = new Domain.LogpunchRegistration(hours, consultantCustomerId);
 
-        _dbContext.TimeRegistrations.Add(time);
+        _dbContext.Registrations.Add(time);
 
         await _dbContext.SaveChangesAsync();
         var expectedCustomer = "TestCompany1";

@@ -6,8 +6,8 @@ using Shared;
 namespace WebPunchlog.Controllers;
 [Authorize]
 [ApiController]
-[Route("api/consultant-overview")]
-public class ConsultantOverviewController(IOverviewService overviewService) : ControllerBase
+[Route("api/employee-overview")]
+public class EmployeeOverviewController(IOverviewService overviewService) : ControllerBase
 {
     [HttpGet("get-overview")]
     public async Task<IActionResult> GetOverview(bool sortAsc, bool showDaysWithNoRecords,

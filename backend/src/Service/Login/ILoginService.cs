@@ -7,5 +7,5 @@ public interface ILoginService
 {
     Task<string> AuthorizeLogin(string email, string password);
 
-    public Task<ConsultantDto> ValidateToken(string token);
+    public Task<LogpunchUserDto> ValidateToken(string token);
 }

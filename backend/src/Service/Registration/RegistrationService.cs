@@ -24,7 +24,7 @@ public class RegistrationService : IRegistrationService
             ?? throw new InvalidOperationException("Employee not found");
 
         LogpunchUser creator = _dbContext.Users.FirstOrDefault(c => c.Id == userId)
-            ?? throw new InvalidOperationException("Employee not found");
+            ?? throw new InvalidOperationException("User not found");
 
         LogpunchClient client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId)
             ?? throw new InvalidOperationException("Client not found");
@@ -40,13 +40,14 @@ public class RegistrationService : IRegistrationService
 
         RegistrationStatus registrationStatus = RegistrationStatus.Awaiting;
 
-        var creationTime = DateTimeOffset.Now;
-
-        var registeredTime = new LogpunchRegistration(employee, creator, client, null, registrationType, totalMinutes, startTime, endTime, creationTime, registrationStatus, internalComment, null);
-        await _dbContext.Registrations.AddAsync(registeredTime);
+        var creationTime = DateTimeOffset.UtcNow;
+        var startTimeUtc = startTime.ToUniversalTime();
+        var endTimeUtc = endTime.ToUniversalTime();
+        var registration = new LogpunchRegistration(employee.Id, registrationType, totalMinutes, startTimeUtc, endTimeUtc, creator.Id, client.Id, creationTime, registrationStatus, internalComment, null, null);
+        await _dbContext.Registrations.AddAsync(registration);
         await _dbContext.SaveChangesAsync();
 
-        return registeredTime;
+        return registration;
     }
 
     public async Task<LogpunchRegistration> StartShiftRegistration(Guid userId, Guid employeeId, Guid? clientId, string? internalComment)
@@ -54,7 +55,8 @@ public class RegistrationService : IRegistrationService
         LogpunchUser employee = _dbContext.Users.FirstOrDefault(c => c.Id == employeeId)
             ?? throw new InvalidOperationException("Employee not found");
 
-        var creator = employee; // change to check who is logged in
+        LogpunchUser creator = _dbContext.Users.FirstOrDefault(c => c.Id == userId)
+            ?? throw new InvalidOperationException("User not found");
 
         LogpunchClient? client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId);
 
@@ -68,14 +70,14 @@ public class RegistrationService : IRegistrationService
         RegistrationType registrationType = RegistrationType.Work;
         RegistrationStatus registrationStatus = RegistrationStatus.Ongoing;
         var startShiftComment = "Start of shift comment: " + Environment.NewLine + internalComment;
-        var creationTime = DateTimeOffset.Now;
+        var creationTime = DateTimeOffset.UtcNow;
         var startTime = creationTime;
 
-        var registeredTime = new LogpunchRegistration(employee, creator, client, null, registrationType, null, startTime, null, creationTime, registrationStatus, startShiftComment, null);
-        await _dbContext.Registrations.AddAsync(registeredTime);
+        var registration = new LogpunchRegistration(employee.Id, registrationType, null, startTime, null, creator.Id, client?.Id, creationTime, registrationStatus, internalComment, null, null);
+        await _dbContext.Registrations.AddAsync(registration);
         await _dbContext.SaveChangesAsync();
 
-        return registeredTime;
+        return registration;
     }
 
     public async Task<LogpunchRegistration> EndShiftRegistration(Guid userId, Guid employeeId, Guid registrationId, string? internalComment)
@@ -91,7 +93,7 @@ public class RegistrationService : IRegistrationService
             throw new InvalidOperationException("Registration status is not 'Ongoing'");
         }
 
-        var endTime = DateTimeOffset.Now;
+        var endTime = DateTimeOffset.UtcNow;
 
         TimeSpan timeSpan = endTime - registration.Start;
         int totalMinutes = (int)timeSpan.TotalMinutes;
@@ -110,8 +112,6 @@ public class RegistrationService : IRegistrationService
         {
             registration.InternalComment = "End of shift comment:" + Environment.NewLine + internalComment;
         }
-
-
 
         await _dbContext.SaveChangesAsync();
 

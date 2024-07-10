@@ -55,12 +55,12 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
             entity.Property(e => e.Type).HasColumnName("registration_type")
                 .IsRequired();
             entity.Property(e => e.Amount).HasColumnName("amount")
-                .IsRequired();
+                .IsRequired(false);
             entity.Property(e => e.Start).HasColumnName("registration_start")
                 .IsRequired();
             entity.Property(e => e.End).HasColumnName("registration_end")
                 .IsRequired(false);
-            entity.Property(e => e.CreatedById).HasColumnName("created_by_id")
+            entity.Property(e => e.CreatorId).HasColumnName("creatorid")
                 .IsRequired();
             entity.Property(e => e.ClientId).HasColumnName("clientid")
                 .IsRequired(false);
@@ -72,7 +72,7 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
                 .IsRequired(false);
             entity.Property(e => e.ExternalComment).HasColumnName("external_comment")
                 .IsRequired(false);
-            entity.Property(e => e.CorrectionOfId).HasColumnName("correction_of_id")
+            entity.Property(e => e.CorrectionOfId).HasColumnName("correctionof_id")
                 .IsRequired(false);
         });
 
@@ -95,12 +95,7 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
                 .HasMaxLength(255)
                 .IsRequired(false);
             entity.Property(e => e.Role).HasColumnName("role")
-                .HasMaxLength(50)
                 .IsRequired();
         });
-
-
-
-
     }
 }

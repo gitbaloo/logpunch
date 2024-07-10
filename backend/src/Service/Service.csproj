@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Infrastructure</RootNamespace>
-      <UserSecretsId>bdf0dfb0-f360-48e8-9466-49b372b836be</UserSecretsId>
+        <UserSecretsId>bdf0dfb0-f360-48e8-9466-49b372b836be</UserSecretsId>
   </PropertyGroup>
 
     <ItemGroup>
@@ -16,8 +16,8 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.2" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.2" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
       <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.1.2" />
       <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.1.2" />

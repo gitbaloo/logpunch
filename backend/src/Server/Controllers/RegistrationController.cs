@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 
-namespace WebPunchlog.Controllers;
+namespace Logpunch.Controllers;
 
 // [Authorize]
 [ApiController]

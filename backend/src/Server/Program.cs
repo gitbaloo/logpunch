@@ -109,6 +109,13 @@ Console.WriteLine($"Connection string: {connectionString}");
 builder.Services.AddDbContext<LogpunchDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.MaxDepth = 64; // Increase if necessary
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

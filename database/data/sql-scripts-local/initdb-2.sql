@@ -19,7 +19,7 @@ VALUES (
         'employee',
         'password1',
         NULL,
-        'Employee'
+        0
     ),
     (
         uuid_generate_v4 (),
@@ -28,7 +28,7 @@ VALUES (
         'admin',
         'password1',
         NULL,
-        'Admin'
+        1
     );
 
 -- Insert test data into Logpunch_Clients
@@ -179,13 +179,13 @@ INSERT INTO
         Amount,
         Registration_Start,
         Registration_End,
-        Created_By_Id,
+        CreatorId,
         ClientId,
         Creation_Time,
         Status_Type,
         Internal_Comment,
         External_Comment,
-        Correction_Of_Id
+        CorrectionOf_Id
     )
 VALUES (
         uuid_generate_v4 (),
@@ -193,7 +193,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         300,
         '2023-06-01 09:00:00',
         '2023-06-01 14:00:00',
@@ -206,7 +206,7 @@ VALUES (
             FROM Client1
         ),
         '2023-06-01 09:00:00',
-        'Settled',
+        5,
         'Internal comment 1',
         'External comment 1',
         NULL
@@ -217,7 +217,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         120,
         '2024-01-02 10:00:00',
         '2024-01-02 12:00:00',
@@ -230,7 +230,7 @@ VALUES (
             FROM Client2
         ),
         '2024-01-02 10:00:00',
-        'Settled',
+        5,
         'Internal comment 2',
         'External comment 2',
         NULL
@@ -241,7 +241,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         180,
         '2024-02-15 11:00:00',
         '2024-02-15 14:00:00',
@@ -254,7 +254,7 @@ VALUES (
             FROM Client3
         ),
         '2024-02-15 11:00:00',
-        'Settled',
+        5,
         'Internal comment 3',
         'External comment 3',
         NULL
@@ -265,7 +265,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         240,
         '2024-02-16 08:00:00',
         '2024-02-16 12:00:00',
@@ -278,7 +278,7 @@ VALUES (
             FROM Client4
         ),
         '2024-02-16 08:00:00',
-        'Settled',
+        5,
         'Internal comment 4',
         'External comment 4',
         NULL
@@ -289,7 +289,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         360,
         '2024-06-17 09:00:00',
         '2024-06-17 15:00:00',
@@ -302,7 +302,7 @@ VALUES (
             FROM Client5
         ),
         '2024-06-18 11:20:05',
-        'Settled',
+        5,
         'Internal comment 5',
         'External comment 5',
         NULL
@@ -313,7 +313,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         180,
         '2024-06-18 10:00:00',
         '2024-06-18 13:00:00',
@@ -326,7 +326,7 @@ VALUES (
             FROM Client6
         ),
         '2024-06-18 16:24:25',
-        'Settled',
+        5,
         'Internal comment 6',
         'External comment 6',
         NULL
@@ -337,7 +337,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         240,
         '2024-06-21 09:00:00',
         '2024-06-21 13:00:00',
@@ -350,7 +350,7 @@ VALUES (
             FROM Client7
         ),
         '2024-06-30 21:12:45',
-        'Settled',
+        5,
         'Internal comment 7',
         'External comment 7',
         NULL
@@ -361,7 +361,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         300,
         '2024-07-02 08:00:00',
         '2024-07-02 13:00:00',
@@ -374,7 +374,7 @@ VALUES (
             FROM Client8
         ),
         '2024-07-02 15:00:00',
-        'Settled',
+        5,
         'Internal comment 8',
         'External comment 8',
         NULL
@@ -385,7 +385,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         360,
         '2024-07-03 09:00:00',
         '2024-07-03 15:00:00',
@@ -398,7 +398,7 @@ VALUES (
             FROM Client9
         ),
         '2024-07-03 16:00:00',
-        'Settled',
+        5,
         'Internal comment 9',
         'External comment 9',
         NULL
@@ -409,7 +409,7 @@ VALUES (
             SELECT EmployeeId
             FROM Employee
         ),
-        'Work',
+        0,
         240,
         '2024-07-08 10:00:00',
         '2024-07-08 14:00:00',
@@ -422,7 +422,7 @@ VALUES (
             FROM Client10
         ),
         '2024-07-09 10:00:00',
-        'Settled',
+        5,
         'Internal comment 10',
         'External comment 10',
         NULL

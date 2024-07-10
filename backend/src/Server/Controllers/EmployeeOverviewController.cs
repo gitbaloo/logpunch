@@ -3,7 +3,7 @@
 // using Service.Login;
 // using Shared;
 
-// namespace WebPunchlog.Controllers;
+// namespace Logpunch.Controllers;
 // [Authorize]
 // [ApiController]
 // [Route("api/employee-overview")]

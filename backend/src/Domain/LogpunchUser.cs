@@ -12,6 +12,7 @@ public class LogpunchUser : Entity
     public string? DefaultQuery { get; set; }
     public UserRole Role { get; set; }
 
+    [JsonIgnore]
     public ICollection<EmployeeClientRelation>? EmployeeClientRelations { get; set; }
 
 

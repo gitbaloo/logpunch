@@ -6,7 +6,7 @@
 // using System.Collections.Generic;
 // using System.Threading.Tasks;
 
-// namespace WebPunchlog.Controllers;
+// namespace Logpunch.Controllers;
 
 // // [Authorize]
 // [ApiController]

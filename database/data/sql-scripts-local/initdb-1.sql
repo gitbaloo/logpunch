@@ -15,7 +15,8 @@ CREATE TABLE Logpunch_Users (
     Email varchar(255) NOT NULL,
     Password varchar(255) NOT NULL,
     Default_Query varchar(255) NULL,
-    Role varchar(50) NOT NULL
+    Role int NOT NULL,
+    CONSTRAINT chk_role CHECK (Role IN (0, 1))
 );
 
 CREATE TABLE Logpunch_Clients (
@@ -26,21 +27,27 @@ CREATE TABLE Logpunch_Clients (
 CREATE TABLE Logpunch_Registrations (
     Id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
     EmployeeId UUID NOT NULL,
-    Registration_Type varchar(255),
+    Registration_Type int NOT NULL,
     Amount int4 NULL,
     Registration_Start timestamptz NOT NULL,
     Registration_End timestamptz NULL,
-    Created_By_Id UUID NOT NULL,
+    CreatorId UUID NOT NULL,
     ClientId UUID NULL,
     Creation_Time timestamptz NOT NULL,
-    Status_Type varchar(255) NOT NULL,
+    Status_Type int NOT NULL,
     Internal_Comment text NULL,
     External_Comment text NULL,
-    Correction_Of_Id UUID NULL,
+    CorrectionOf_Id UUID NULL,
     CONSTRAINT FKEmployee FOREIGN KEY (EmployeeId) REFERENCES Logpunch_Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT FKCreatedBy FOREIGN KEY (Created_By_Id) REFERENCES Logpunch_Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT FKCreator FOREIGN KEY (CreatorId) REFERENCES Logpunch_Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT FKClient FOREIGN KEY (ClientId) REFERENCES Logpunch_Clients (Id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT FKCorrectionOf FOREIGN KEY (Correction_Of_Id) REFERENCES Logpunch_Registrations (Id) ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT FKCorrectionOf FOREIGN KEY (CorrectionOf_Id) REFERENCES Logpunch_Registrations (Id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT chk_registration_type CHECK (
+        Registration_Type IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+    ),
+    CONSTRAINT chk_status_type CHECK (
+        Status_Type IN (0, 1, 2, 3, 4, 5)
+    )
 );
 
 CREATE TABLE Logpunch_Employee_Client_Relations (

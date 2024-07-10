@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Reflection.Metadata;
 using Npgsql;
 using NpgsqlTypes;
+using Newtonsoft.Json;
 
 namespace Domain
 {
@@ -18,8 +19,8 @@ namespace Domain
         public DateTimeOffset Start { get; set; }
         [Column("registration_end")]
         public DateTimeOffset? End { get; set; }
-        [Column("created_by_id")]
-        public Guid CreatedById { get; set; }
+        [Column("creatorid")]
+        public Guid CreatorId { get; set; }
         [Column("clientid")]
         public Guid? ClientId { get; set; }
         [Column("creation_time")]
@@ -30,48 +31,36 @@ namespace Domain
         public string? InternalComment { get; set; }
         [Column("external_comment")]
         public string? ExternalComment { get; set; }
-        [Column("correction_of_id")]
+        [Column("correctionof_id")]
         public Guid? CorrectionOfId { get; set; }
 
+        [JsonIgnore]
         public LogpunchUser? Employee { get; set; }
+        [JsonIgnore]
         public LogpunchUser? Creator { get; set; }
+        [JsonIgnore]
         public LogpunchClient? Client { get; set; }
+        [JsonIgnore]
         public LogpunchRegistration? CorrectionOf { get; set; }
 
-        public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid createdById, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? externalComment, Guid? correctionOfId)
+        public LogpunchRegistration()
+        {
+
+        }
+        public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? externalComment, Guid? correctionOfId)
         {
             EmployeeId = employeeId;
             Type = type;
             Amount = amount;
             Start = start;
             End = end;
-            CreatedById = createdById;
+            CreatorId = creatorId;
             ClientId = clientId;
             CreationTime = creationTime;
             Status = status;
             InternalComment = internalComment;
             ExternalComment = externalComment;
             CorrectionOfId = correctionOfId;
-        }
-
-        public LogpunchRegistration(LogpunchUser employee, LogpunchUser creator, LogpunchClient? client, LogpunchRegistration? correctionOf, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? externalComment)
-        {
-            Employee = employee;
-            Creator = creator;
-            Client = client;
-            CorrectionOf = correctionOf;
-            EmployeeId = employee.Id;
-            Type = type;
-            Amount = amount;
-            Start = start;
-            End = end;
-            CreatedById = creator.Id;
-            ClientId = client?.Id;
-            CreationTime = creationTime;
-            Status = status;
-            InternalComment = internalComment;
-            ExternalComment = externalComment;
-            CorrectionOfId = correctionOf?.Id;
         }
     }
 }

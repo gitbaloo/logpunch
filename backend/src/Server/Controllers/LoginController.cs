@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Login;
 
-namespace WebPunchlog.Controllers;
+namespace Logpunch.Controllers;
 
 [ApiController]
 [Route("api/login")]

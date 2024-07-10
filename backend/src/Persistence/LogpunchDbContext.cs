@@ -50,6 +50,10 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
             entity.ToTable("logpunch_registrations");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.EmployeeId).HasColumnName("employeeid")
+                .IsRequired();
+            entity.Property(e => e.Type).HasColumnName("registration_type")
+                .IsRequired();
             entity.Property(e => e.Amount).HasColumnName("amount")
                 .IsRequired();
             entity.Property(e => e.Start).HasColumnName("registration_start")

@@ -92,7 +92,7 @@ public class LoginService : ILoginService
             }, out SecurityToken validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
-            var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
+            var userId = Guid.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
             var user = await _dbContext.Users.Where(c => c.Id == userId).Select(c => new LogpunchUserDto
             {
                 Email = c.Email,

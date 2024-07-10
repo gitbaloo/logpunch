@@ -1,8 +1,8 @@
 using System.Text;
 using Domain;
 using Infrastructure;
-using Infrastructure.Customer;
-using Infrastructure.Overview;
+// using Infrastructure.Client;
+// using Infrastructure.Overview;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,9 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
+// builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
-builder.Services.AddScoped<IOverviewService, OverviewService>();
+// builder.Services.AddScoped<IOverviewService, OverviewService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

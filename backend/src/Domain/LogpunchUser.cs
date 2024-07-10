@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using Service.Login;
 
 namespace Domain;
 
@@ -11,12 +10,12 @@ public class LogpunchUser : Entity
     [JsonIgnore]
     public string Password { get; set; }
     public string? DefaultQuery { get; set; }
-    public string Role { get; set; }
+    public UserRole Role { get; set; }
 
     public ICollection<EmployeeClientRelation>? EmployeeClientRelations { get; set; }
 
 
-    public LogpunchUser(string firstName, string lastName, string email, string password, string? defaultQuery, string role)
+    public LogpunchUser(string firstName, string lastName, string email, string password, string? defaultQuery, UserRole role)
     {
         FirstName = firstName;
         LastName = lastName;

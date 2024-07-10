@@ -8,8 +8,6 @@ DROP TABLE IF EXISTS Logpunch_Users;
 
 DROP TABLE IF EXISTS Logpunch_Clients;
 
-DROP TABLE IF EXISTS Logpunch_Tasks;
-
 CREATE TABLE Logpunch_Users (
     Id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
     First_Name varchar(50) NOT NULL,
@@ -38,9 +36,11 @@ CREATE TABLE Logpunch_Registrations (
     Status_Type varchar(255) NOT NULL,
     Internal_Comment text NULL,
     External_Comment text NULL,
+    Correction_Of_Id UUID NULL,
     CONSTRAINT FKEmployee FOREIGN KEY (EmployeeId) REFERENCES Logpunch_Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT FKCreatedBy FOREIGN KEY (Created_By_Id) REFERENCES Logpunch_Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT FKClient FOREIGN KEY (ClientId) REFERENCES Logpunch_Clients (Id) ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT FKClient FOREIGN KEY (ClientId) REFERENCES Logpunch_Clients (Id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT FKCorrectionOf FOREIGN KEY (Correction_Of_Id) REFERENCES Logpunch_Registrations (Id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Logpunch_Employee_Client_Relations (

@@ -54,7 +54,7 @@ namespace Domain
             CorrectionOfId = correctionOfId;
         }
 
-        public LogpunchRegistration(LogpunchUser employee, LogpunchUser creator, LogpunchClient? client, LogpunchRegistration? correctionOf, RegistrationType type, int amount, DateTimeOffset start, DateTimeOffset end, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? externalComment)
+        public LogpunchRegistration(LogpunchUser employee, LogpunchUser creator, LogpunchClient? client, LogpunchRegistration? correctionOf, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? externalComment)
         {
             Employee = employee;
             Creator = creator;

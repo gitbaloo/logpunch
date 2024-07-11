@@ -1,85 +1,429 @@
--- Consultants
-INSERT INTO Consultant (Email, First_Name, Last_Name, Password, Default_Query) VALUES ('fh@techchapter.com', 'Frederik', 'Hansen', 'password1', null);
-INSERT INTO Consultant (Email, First_Name, Last_Name, Password, Default_Query) VALUES ('nv@techchapter.com', 'Nikolaj', 'Vølver', 'password2', null);
-INSERT INTO Consultant (Email, First_Name, Last_Name, Password, Default_Query) VALUES ('jgc@techchapter.com', 'Jamie', 'Callan', 'password3', null);
+-- Enable the UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Customers
-INSERT INTO Customer (Name) VALUES ('LEGO');
-INSERT INTO Customer (Name) VALUES ('Nets');
-INSERT INTO Customer (Name) VALUES ('Novo Nordisk');
-INSERT INTO Customer (Name) VALUES ('Statens IT');
-INSERT INTO Customer (Name) VALUES ('TopDanmark');
-INSERT INTO Customer (Name) VALUES ('Zoles');
-INSERT INTO Customer (Name) VALUES ('Danske Bank');
-INSERT INTO Customer (Name) VALUES ('Carlsberg');
-INSERT INTO Customer (Name) VALUES ('Maersk');
-INSERT INTO Customer (Name) VALUES ('Vestas');
+-- Insert test data into Logpunch_Users
+INSERT INTO
+    Logpunch_Users (
+        Id,
+        Email,
+        First_Name,
+        Last_Name,
+        Password,
+        Default_Query,
+        Role
+    )
+VALUES (
+        uuid_generate_v4 (),
+        'employee@test.com',
+        'test',
+        'employee',
+        'password1',
+        NULL,
+        0
+    ),
+    (
+        uuid_generate_v4 (),
+        'admin@test.com',
+        'test',
+        'admin',
+        'password1',
+        NULL,
+        1
+    );
 
--- Linking Consultants with Customers
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 1);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 2);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 3);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 4);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 5);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (1, 6);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 3);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 4);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 5);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (2, 6);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 1);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 2);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 3);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 4);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 5);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 6);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 7);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 8);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 9);
-INSERT INTO Consultant_Customer (ConsultantId, CustomerId) VALUES (3, 10);
+-- Insert test data into Logpunch_Clients
+INSERT INTO
+    Logpunch_Clients (Id, Name)
+VALUES (uuid_generate_v4 (), 'LEGO'),
+    (uuid_generate_v4 (), 'Nets'),
+    (
+        uuid_generate_v4 (),
+        'Novo Nordisk'
+    ),
+    (
+        uuid_generate_v4 (),
+        'Statens IT'
+    ),
+    (
+        uuid_generate_v4 (),
+        'TopDanmark'
+    ),
+    (uuid_generate_v4 (), 'Zoles'),
+    (
+        uuid_generate_v4 (),
+        'Danske Bank'
+    ),
+    (
+        uuid_generate_v4 (),
+        'Carlsberg'
+    ),
+    (uuid_generate_v4 (), 'Maersk'),
+    (uuid_generate_v4 (), 'Vestas');
 
--- Time Registrations
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-01-01', 1);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (2, '2024-01-02', 2);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-15', 3);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-16', 4);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-17', 5);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-18', 6);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-19', 7);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-02-20', 8);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-21', 9);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-22', 10);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-02-23', 11);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-24', 12);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-02-25', 13);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-26', 14);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-27', 15);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (8, '2024-02-28', 16);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2023-12-10', 1);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2023-12-15', 2);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2023-12-20', 3);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2023-12-25', 4);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2023-12-30', 5);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-01-05', 6);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-01-10', 7);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (8, '2024-01-15', 8);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-01-20', 9);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-01-25', 10);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-01-30', 11);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-02-05', 12);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-02-10', 13);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-02-15', 14);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-02-20', 15);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-02-25', 16);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-03-01', 1);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (8, '2024-03-05', 2);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-03-10', 3);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-03-15', 4);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-03-20', 5);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-03-25', 6);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-03-30', 7);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-04-05', 8);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (5, '2024-04-10', 9);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (6, '2024-04-15', 10);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (4, '2024-04-20', 11);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (7, '2024-04-25', 12);
-INSERT INTO Time_Registration (Hours, Registration_Date, Consultant_CustomerId) VALUES (3, '2024-04-30', 13);
+-- Get UUIDs of inserted users and clients
+WITH
+    Employee AS (
+        SELECT Id AS EmployeeId
+        FROM Logpunch_Users
+        WHERE
+            Email = 'employee@test.com'
+    ),
+    Admin AS (
+        SELECT Id AS AdminId
+        FROM Logpunch_Users
+        WHERE
+            Email = 'admin@test.com'
+    ),
+    Clients AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+    )
+INSERT INTO
+    Logpunch_Employee_Client_Relations (Id, EmployeeId, ClientId)
+SELECT uuid_generate_v4 (), (
+        SELECT EmployeeId
+        FROM Employee
+    ), ClientId
+FROM Clients;
+
+-- Insert test data into Logpunch_Registrations
+WITH
+    Employee AS (
+        SELECT Id AS EmployeeId
+        FROM Logpunch_Users
+        WHERE
+            Email = 'employee@test.com'
+    ),
+    Admin AS (
+        SELECT Id AS AdminId
+        FROM Logpunch_Users
+        WHERE
+            Email = 'admin@test.com'
+    ),
+    Client1 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            0
+    ),
+    Client2 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            1
+    ),
+    Client3 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            2
+    ),
+    Client4 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            3
+    ),
+    Client5 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            4
+    ),
+    Client6 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            5
+    ),
+    Client7 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            6
+    ),
+    Client8 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            7
+    ),
+    Client9 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            8
+    ),
+    Client10 AS (
+        SELECT Id AS ClientId
+        FROM Logpunch_Clients
+        LIMIT 1
+        OFFSET
+            9
+    )
+
+INSERT INTO
+    Logpunch_Registrations (
+        Id,
+        EmployeeId,
+        Registration_Type,
+        Amount,
+        Registration_Start,
+        Registration_End,
+        CreatorId,
+        ClientId,
+        Creation_Time,
+        Status_Type,
+        Internal_Comment,
+        External_Comment,
+        CorrectionOf_Id
+    )
+VALUES (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        300,
+        '2023-06-01 09:00:00',
+        '2023-06-01 14:00:00',
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        (
+            SELECT ClientId
+            FROM Client1
+        ),
+        '2023-06-01 09:00:00',
+        5,
+        'Internal comment 1',
+        'External comment 1',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        120,
+        '2024-01-02 10:00:00',
+        '2024-01-02 12:00:00',
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        (
+            SELECT ClientId
+            FROM Client2
+        ),
+        '2024-01-02 10:00:00',
+        5,
+        'Internal comment 2',
+        'External comment 2',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        180,
+        '2024-02-15 11:00:00',
+        '2024-02-15 14:00:00',
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        (
+            SELECT ClientId
+            FROM Client3
+        ),
+        '2024-02-15 11:00:00',
+        5,
+        'Internal comment 3',
+        'External comment 3',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        240,
+        '2024-02-16 08:00:00',
+        '2024-02-16 12:00:00',
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        (
+            SELECT ClientId
+            FROM Client4
+        ),
+        '2024-02-16 08:00:00',
+        5,
+        'Internal comment 4',
+        'External comment 4',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        360,
+        '2024-06-17 09:00:00',
+        '2024-06-17 15:00:00',
+        (
+            SELECT AdminId
+            FROM Admin
+        ),
+        (
+            SELECT ClientId
+            FROM Client5
+        ),
+        '2024-06-18 11:20:05',
+        5,
+        'Internal comment 5',
+        'External comment 5',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        180,
+        '2024-06-18 10:00:00',
+        '2024-06-18 13:00:00',
+        (
+            SELECT AdminId
+            FROM Admin
+        ),
+        (
+            SELECT ClientId
+            FROM Client6
+        ),
+        '2024-06-18 16:24:25',
+        5,
+        'Internal comment 6',
+        'External comment 6',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        240,
+        '2024-06-21 09:00:00',
+        '2024-06-21 13:00:00',
+        (
+            SELECT AdminId
+            FROM Admin
+        ),
+        (
+            SELECT ClientId
+            FROM Client7
+        ),
+        '2024-06-30 21:12:45',
+        5,
+        'Internal comment 7',
+        'External comment 7',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        300,
+        '2024-07-02 08:00:00',
+        '2024-07-02 13:00:00',
+        (
+            SELECT AdminId
+            FROM Admin
+        ),
+        (
+            SELECT ClientId
+            FROM Client8
+        ),
+        '2024-07-02 15:00:00',
+        5,
+        'Internal comment 8',
+        'External comment 8',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        360,
+        '2024-07-03 09:00:00',
+        '2024-07-03 15:00:00',
+        (
+            SELECT AdminId
+            FROM Admin
+        ),
+        (
+            SELECT ClientId
+            FROM Client9
+        ),
+        '2024-07-03 16:00:00',
+        5,
+        'Internal comment 9',
+        'External comment 9',
+        NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        0,
+        240,
+        '2024-07-08 10:00:00',
+        '2024-07-08 14:00:00',
+        (
+            SELECT AdminId
+            FROM Admin
+        ),
+        (
+            SELECT ClientId
+            FROM Client10
+        ),
+        '2024-07-09 10:00:00',
+        5,
+        'Internal comment 10',
+        'External comment 10',
+        NULL
+    );

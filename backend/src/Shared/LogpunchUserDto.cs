@@ -1,28 +1,30 @@
 namespace Shared;
 
-public class ConsultantDto
+public class LogpunchUserDto
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string Email { get; set; }
     public string? DefaultQuery { get; set; }
+    public int Role { get; set; }
 
-
-    public ConsultantDto(int id, string firstName, string lastName, string email, string? defaultQuery)
+    public LogpunchUserDto(Guid id, string firstName, string lastName, string email, string? defaultQuery, int role)
     {
         Id = id;
         FirstName = firstName;
         LastName = lastName;
         Email = email;
         DefaultQuery = defaultQuery;
+        Role = role;
     }
 
-    public ConsultantDto()
+    public LogpunchUserDto()
     {
         FirstName = "";
         LastName = "";
         Email = "";
         DefaultQuery = null;
+        Role = 0;
     }
 }

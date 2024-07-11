@@ -7,13 +7,13 @@ public abstract class Entity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public virtual int Id { get; protected set; }
+    public virtual Guid Id { get; protected set; }
 
     protected Entity()
     {
     }
 
-    protected Entity(int id)
+    protected Entity(Guid id)
     {
         Id = id;
     }

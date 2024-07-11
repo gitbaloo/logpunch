@@ -6,10 +6,6 @@ export JWT_ISSUER="logpunch"
 export JWT_AUDIENCE="Audience"
 export CONNECTION_STRING="Host=localhost:5433;Database=logpunchdb;Username=logpunchuser;Password=logpunch1234"
 
-# Kill processes using ports 7206 (backend), 5173 (frontend), and any relevant docker ports
-kill -9 $(lsof -t -i:5173) 2> /dev/null
-
-
 # Get the directory of the script
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
@@ -26,24 +22,37 @@ change_directory() {
 # Start the backend
 echo "Starting backend..."
 change_directory "$SCRIPT_DIR/backend/src/Server/"
-docker compose up &
+docker compose up -d &
 BACKEND_PID=$!
 
 # Start the frontend
 echo "Starting frontend..."
 change_directory "$SCRIPT_DIR/frontend/"
-docker compose up &
+docker compose up -d &
 FRONTEND_PID=$!
 
 # Start the database
 echo "Starting database..."
 change_directory "$SCRIPT_DIR/database/data/"
-docker compose up &
+docker compose up -d &
 DATABASE_PID=$!
+
+# Wait for a few seconds to ensure services start properly
+sleep 10
+
+echo "Solution launched!"
+echo "Launching browser tabs..."
+
+# database (pgAdmin 4)
+xdg-open "http://localhost:8081/browser/"
+
+# backend
+xdg-open "http://localhost:7206/swagger/index.html"
+
+# frontend
+xdg-open "http://localhost:5173/"
 
 # Wait for all processes to finish
 wait $BACKEND_PID
 wait $FRONTEND_PID
 wait $DATABASE_PID
-
-echo "Solution launched!"

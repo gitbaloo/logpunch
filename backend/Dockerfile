@@ -1,19 +1,32 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /logpunch
+# Use the official .NET SDK image for building the app
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+WORKDIR /app
 
-# Copy everything
-COPY . ./
+# Copy the solution and project files
+COPY *.sln ./
+COPY src/Server/Server.csproj ./src/Server/
+COPY src/Domain/Domain.csproj ./src/Domain/
+COPY src/Persistence/Persistence.csproj ./src/Persistence/
+COPY src/Service/Service.csproj ./src/Service/
+COPY src/Service.Tests/Service.Tests.csproj ./src/Service.Tests/
+COPY src/Shared/Shared.csproj ./src/Shared/
 
-# Restore as distinct layers
-WORKDIR /logpunch/src/Server
+# Restore dependencies
 RUN dotnet restore
 
-# Build and publish a release
-RUN dotnet publish -c Release -o out
+# Copy the entire source code
+COPY . ./
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /logpunch
-COPY --from=build /logpunch/src/Server/out ./
+# Build the project
+RUN dotnet publish src/Server/Server.csproj -c Release -o out
+
+# Use the official ASP.NET Core runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build-env /app/out .
+
+# Expose the port the app runs on
 EXPOSE 7206
-ENV ASPNETCORE_URLS=http://+:7206
-ENTRYPOINT ["dotnet", "logpunch.dll"]
+
+# Set the entry point for the container
+ENTRYPOINT ["dotnet", "LogpunchBackend.dll"]

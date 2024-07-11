@@ -1,8 +1,8 @@
 using System.Text;
 using Domain;
 using Infrastructure;
-using Infrastructure.Customer;
-using Infrastructure.Overview;
+// using Infrastructure.Client;
+// using Infrastructure.Overview;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,10 +16,10 @@ var AllowedOrigins = "_allowedOrigins";
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<ITimeRegistrationService, TimeRegistrationService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+// builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
-builder.Services.AddScoped<IOverviewService, OverviewService>();
+// builder.Services.AddScoped<IOverviewService, OverviewService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -108,6 +108,13 @@ Console.WriteLine($"Connection string: {connectionString}");
 
 builder.Services.AddDbContext<LogpunchDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.MaxDepth = 64; // Increase if necessary
+    });
 
 var app = builder.Build();
 

@@ -28,9 +28,9 @@ namespace Domain
         [Column("status_type")]
         public RegistrationStatus Status { get; set; }
         [Column("internal_comment")]
-        public string? InternalComment { get; set; }
+        public string? FirstComment { get; set; }
         [Column("external_comment")]
-        public string? ExternalComment { get; set; }
+        public string? SecondComment { get; set; }
         [Column("correctionof_id")]
         public Guid? CorrectionOfId { get; set; }
 
@@ -47,7 +47,7 @@ namespace Domain
         {
 
         }
-        public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? externalComment, Guid? correctionOfId)
+        public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? secondInternalComment, Guid? correctionOfId)
         {
             EmployeeId = employeeId;
             Type = type;
@@ -58,8 +58,8 @@ namespace Domain
             ClientId = clientId;
             CreationTime = creationTime;
             Status = status;
-            InternalComment = internalComment;
-            ExternalComment = externalComment;
+            FirstComment = internalComment;
+            SecondComment = secondInternalComment;
             CorrectionOfId = correctionOfId;
         }
     }

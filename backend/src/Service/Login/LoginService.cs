@@ -25,7 +25,7 @@ public class LoginService : ILoginService
 
     public async Task<string> AuthorizeLogin(string email, string password)
     {
-        var consultant = await _dbContext.Users
+        var user = await _dbContext.Users
             .Where(c => c.Email == email && c.Password == password)
             .Select(c => new LogpunchUserDto
             {
@@ -34,16 +34,16 @@ public class LoginService : ILoginService
             })
             .FirstOrDefaultAsync();
 
-        if (consultant != null)
+        if (user != null)
         {
-            var token = GenerateJwtToken(consultant);
+            var token = GenerateJwtToken(user);
             return token;
         }
 
         throw new ArgumentException("Invalid Username/Password");
     }
 
-    private string GenerateJwtToken(LogpunchUserDto consultant)
+    private string GenerateJwtToken(LogpunchUserDto user)
     {
         var jwtSigningCert = _configuration["JWT_KEY"];
         if (string.IsNullOrEmpty(jwtSigningCert))
@@ -54,8 +54,8 @@ public class LoginService : ILoginService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Email, consultant.Email),
-            new Claim(JwtRegisteredClaimNames.NameId, consultant.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
             // Add other claims as needed
         };
 

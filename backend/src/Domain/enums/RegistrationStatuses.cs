@@ -4,7 +4,7 @@ namespace Domain
     {
         Ongoing,
         Awaiting,
-        InReview,
+        Pending,
         Approved,
         Rejected,
         Settled

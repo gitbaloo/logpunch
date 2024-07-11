@@ -11,11 +11,11 @@
 // public class OverviewService(LogpunchDbContext dbContext, ILoginService loginService) : IOverviewService
 // {
 //     public async Task<OverviewResponse> OverviewQuery(string token, bool sortAsc, bool showDaysWithNoRecords,
-//         bool setDefault, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,
+//         bool setDefault, DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
 //         string thenBy)
 //     {
 //         var user = await loginService.ValidateToken(token);
-//         DateTime originalStartDate = startDate;
+//         DateTimeOffset originalStartDate = startDate;
 //         string queryString;
 
 //         if (endDate is null)
@@ -24,7 +24,7 @@
 //         }
 //         else
 //         {
-//             queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, set_default={setDefault}, start_date={startDate.ToShortDateString()}, end_date={endDate.Value.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+//             queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, set_default={setDefault}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
 //         }
 
 //         if (user == null)
@@ -54,16 +54,10 @@
 //         }
 
 
-//         DateTime utcStartDate = startDate.ToUniversalTime().AddHours(1);
+//         DateTimeOffset utcStartDate = startDate.ToUniversalTime().AddHours(1);
 
-//         DateTime utcEndDate = default;
+//         DateTimeOffset utcEndDate = default;
 
-//         // DEMO FIX: REMOVE AFTER DEMO
-//         if (endDate.HasValue)
-//         {
-//             utcEndDate = endDate.Value.ToUniversalTime();
-//             utcEndDate = utcEndDate.Add(new TimeSpan(24, 59, 59));
-//         }
 
 //         Console.WriteLine($"Start date: {utcStartDate} End date: {utcEndDate}");
 
@@ -147,7 +141,7 @@
 
 //         return defaultQuery;
 //     }
-//     private DateTime FindStartDateOfTimePeriod(DateTime startDate, string timePeriod, string timeMode)
+//     private DateTimeOffset FindStartDateOfTimePeriod(DateTimeOffset startDate, string timePeriod, string timeMode)
 //     {
 //         if (timePeriod == "day")
 //         {
@@ -221,7 +215,7 @@
 //         throw new ArgumentException("Invalid timeperiod: " + timePeriod);
 //     }
 
-//     private DateTime FindStartDateOfWeek(DateTime startDate)
+//     private DateTimeOffset FindStartDateOfWeek(DateTimeOffset startDate)
 //     {
 //         switch (startDate.DayOfWeek)
 //         {
@@ -251,12 +245,12 @@
 //         }
 //     }
 
-//     private DateTime FindStartDateOfMonth(DateTime startDate)
+//     private DateTimeOffset FindStartDateOfMonth(DateTimeOffset startDate)
 //     {
-//         return new DateTime(startDate.Year, startDate.Month, 1);
+//         return new DateTimeOffset(startDate.Year, startDate.Month, 1);
 //     }
 
-//     private DateTime LastValidDate(DateTime dateTime)
+//     private DateTimeOffset LastValidDate(DateTimeOffset dateTime)
 //     {
 //         if (dateTime.DayOfWeek == DayOfWeek.Sunday || dateTime.DayOfWeek == DayOfWeek.Saturday)
 //         {
@@ -268,7 +262,7 @@
 //         }
 //     }
 
-//     private DateTime NextValidDate(DateTime startDate)
+//     private DateTimeOffset NextValidDate(DateTimeOffset startDate)
 //     {
 //         if (startDate.DayOfWeek == DayOfWeek.Sunday)
 //         {
@@ -282,7 +276,7 @@
 //         return startDate;
 //     }
 
-//     private DateTime FindEndDate(DateTime originalStartDate, DateTime startDate, string timePeriod, string timeMode)
+//     private DateTimeOffset FindEndDate(DateTimeOffset originalStartDate, DateTimeOffset startDate, string timePeriod, string timeMode)
 //     {
 //         switch (timePeriod)
 //         {
@@ -345,24 +339,24 @@
 //         }
 //     }
 
-//     private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUserDto user, DateTime utcStartDate,
-//         DateTime utcEndDate, bool showDaysWithNoRecords)
+//     private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUserDto user, DateTimeOffset utcStartDate,
+//         DateTimeOffset utcEndDate, bool showDaysWithNoRecords)
 //     {
 //         List<GroupByObject> result = new List<GroupByObject>();
 
-//         var consultantCustomerIds = await dbContext.EmployeeClientRelations
-//             .Where(cc => cc.ConsultantId == user.Id)
-//             .Select(cc => cc.Id)
+//         var employeeClientRelationIds = await dbContext.EmployeeClientRelations
+//             .Where(ecr => ecr.ClientId == user.Id)
+//             .Select(ecr => ecr.Id)
 //             .ToListAsync();
 
 //         var rawData = await dbContext.Registrations
-//             .Where(tr => consultantCustomerIds.Contains(tr.LogpunchTask)
-//                          && tr.RegistrationDate >= utcStartDate
-//                          && tr.RegistrationDate <= utcEndDate)
-//             .OrderBy(tr => tr.RegistrationDate).Select(tr => new
+//             .Where(r => employeeClientRelationIds.Contains(r.LogpunchTask)
+//                          && r.Start >= utcStartDate
+//                          && r.Start <= utcEndDate)
+//             .OrderBy(r => r.Start).Select(r => new
 //             {
-//                 tr.RegistrationDate,
-//                 tr.Hours
+//                 r.RegistrationDate,
+//                 r.Hours
 //             })
 //             .ToListAsync();
 
@@ -372,16 +366,16 @@
 
 //                 result = await dbContext.Registrations
 //                 .Join(dbContext.EmployeeClientRelations,
-//                     tr => tr.LogpunchTask,
-//                     cc => cc.Id,
-//                     (tr, cc) => new { tr, cc })
-//                 .Where(joined => consultantCustomerIds.Contains(joined.cc.Id)
-//                                  && joined.tr.RegistrationDate >= utcStartDate
-//                                  && joined.tr.RegistrationDate <= utcEndDate)
-//                 .GroupBy(joined => joined.tr.RegistrationDate.Date)
+//                     r => r.LogpunchTask,
+//                     ecr => ecr.Id,
+//                     (r, ecr) => new { r, ecr })
+//                 .Where(joined => employeeClientRelationIds.Contains(joined.ecr.Id)
+//                                  && joined.r.Start >= utcStartDate
+//                                  && joined.r.Start <= utcEndDate)
+//                 .GroupBy(joined => joined.r.Start.Date)
 //                 .Select(group => new GroupByObject(
 //                     group.Key.ToString("dd/MM/yyyy"),
-//                     group.Sum(item => item.tr.Hours),
+//                     group.Sum(item => item.r.Hours),
 //                     new List<ThenByObject>()
 //                 ))
 //                 .ToListAsync();
@@ -397,17 +391,17 @@
 //                     var missingGroupByObjects = missingDates.Select(date => new GroupByObject(date, 0, new List<ThenByObject>()));
 
 //                     result.AddRange(missingGroupByObjects);
-//                     result = result.OrderBy(r => DateTime.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
+//                     result = result.OrderBy(r => DateTimeOffset.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
 //                 }
 
 //                 break;
 //             case "week":
 
 //                 result = rawData
-//                 .GroupBy(tr => new
+//                 .GroupBy(r => new
 //                 {
-//                     Year = tr.RegistrationDate.Year,
-//                     Week = GetDanishWeekNumber(tr.RegistrationDate)
+//                     Year = r.Start.Year,
+//                     Week = GetDanishWeekNumber(r.Start)
 //                 })
 //                 .Select(g => new GroupByObject(
 //                     $"Week {g.Key.Week}, {g.Key.Year}",
@@ -426,10 +420,10 @@
 //             case "month":
 
 //                 result = rawData
-//                 .GroupBy(tr => new { tr.RegistrationDate.Year, tr.RegistrationDate.Month })
+//                 .GroupBy(r => new { r.Start.Year, r.Start.Month })
 //                 .Select(g => new GroupByObject(
 //                     CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month) + $" {g.Key.Year}",
-//                     g.Sum(tr => tr.Hours),
+//                     g.Sum(r => r.Hours),
 //                     new List<ThenByObject>()
 //                 ))
 //                 .ToList();
@@ -443,10 +437,10 @@
 //             case "year":
 
 //                 result = rawData
-//                 .GroupBy(tr => new { tr.RegistrationDate.Year })
+//                 .GroupBy(r => new { r.Start.Year })
 //                 .Select(g => new GroupByObject(
 //                     g.Key.Year.ToString(),
-//                     g.Sum(tr => tr.Hours),
+//                     g.Sum(r => r.Hours),
 //                     new List<ThenByObject>()
 //                 ))
 //                 .ToList();
@@ -461,16 +455,16 @@
 
 //                 result = await dbContext.Registrations
 //                 .Join(dbContext.EmployeeClientRelations,
-//                     tr => tr.LogpunchTask,
-//                     cc => cc.Id,
-//                     (tr, cc) => new { tr, cc })
+//                     r => r.LogpunchTask,
+//                     ecr => ecr.Id,
+//                     (r, ecr) => new { r, ecr })
 //                 .Join(dbContext.Clients,
-//                     joined => joined.cc.CustomerId,
+//                     joined => joined.ecr.ClientId,
 //                     c => c.Id,
-//                     (joined, c) => new { joined.tr, joined.cc, c })
-//                 .Where(joined => consultantCustomerIds.Contains(joined.cc.Id)
-//                                  && joined.tr.RegistrationDate >= utcStartDate
-//                                  && joined.tr.RegistrationDate <= utcEndDate)
+//                     (joined, c) => new { joined.r, joined.ecr, c })
+//                 .Where(joined => employeeClientRelationIds.Contains(joined.ecr.Id)
+//                                  && joined.r.Start >= utcStartDate
+//                                  && joined.r.Start <= utcEndDate)
 //                 .GroupBy(joined => joined.c.Name)
 //                 .Select(group => new GroupByObject(
 //                     group.Key,
@@ -491,7 +485,7 @@
 
 //         return result;
 //     }
-//     private bool IsGroupByValid(string groupBy, DateTime startDate, DateTime endDate)
+//     private bool IsGroupByValid(string groupBy, DateTimeOffset startDate, DateTimeOffset endDate)
 //     {
 //         switch (groupBy)
 //         {
@@ -543,11 +537,12 @@
 //         }
 //     }
 
-//     private int GetDanishWeekNumber(DateTime dateTime)
+//     private int GetDanishWeekNumber(DateTimeOffset dateTimeOffset)
 //     {
 //         CultureInfo danishCulture = new CultureInfo("da-DK");
 //         Calendar calendar = danishCulture.Calendar;
-//         int weekNumber = calendar.GetWeekOfYear(dateTime, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+//         int weekNumber = calendar.GetWeekOfYear(dateTimeOffset.DateTime, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
 //         return weekNumber;
 //     }
 

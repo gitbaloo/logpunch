@@ -7,9 +7,9 @@
 	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f477bea3_002Dcb9b_002D4980_002Da962_002D1d40fee2978f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HolidayTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
-    &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.TimeRegistrationServiceTest&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Customer.CustomerServiceTest.GET_FAVORITE&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Customer.CustomerServiceTest&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.RegistrationServiceTest&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Client.ClientServiceTest.GET_FAVORITE&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Client.ClientServiceTest&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Overview.OverviewTest&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Overview.OverviewServiceTest.SHOW_PAST_BANK_DAY&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::C1433896-0338-43A7-BCD8-0AE621273167::net8.0::Service.Tests.Overview.OverviewServiceTest&lt;/TestId&gt;

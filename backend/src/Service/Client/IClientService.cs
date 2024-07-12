@@ -1,9 +1,9 @@
-// using Domain;
-// using Shared;
+using Domain;
+using Shared;
 
-// namespace Infrastructure.Customer;
+namespace Infrastructure.Client;
 
-// public interface ICustomerService
-// {
-//     Task<List<LogpunchClientDto>> GetCustomers(int consultantId);
-// }
+public interface IClientService
+{
+    Task<List<LogpunchClientDto>> GetClients(Guid employeeId);
+}

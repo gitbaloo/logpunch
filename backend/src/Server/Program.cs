@@ -1,7 +1,7 @@
 using System.Text;
 using Domain;
 using Infrastructure;
-// using Infrastructure.Client;
+using Infrastructure.Client;
 // using Infrastructure.Overview;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
-// builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 // builder.Services.AddScoped<IOverviewService, OverviewService>();
 builder.Services.AddControllers();

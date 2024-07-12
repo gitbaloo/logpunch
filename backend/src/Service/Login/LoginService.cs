@@ -66,10 +66,14 @@ public class LoginService : ILoginService
 
             var jwtToken = (JwtSecurityToken)validatedToken;
             var userId = Guid.Parse(jwtToken.Claims.First(x => x.Type == "nameid").Value);
-            var user = await _dbContext.Users.Where(c => c.Id == userId).Select(c => new LogpunchUserDto
+            var user = await _dbContext.Users.Where(u => u.Id == userId).Select(u => new LogpunchUserDto
             {
-                Email = c.Email,
-                Id = c.Id
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                DefaultQuery = u.DefaultQuery,
+                Role = u.Role.ToString()
             }).FirstOrDefaultAsync();
             return user ?? throw new AuthenticationException("Error validating user");
         }

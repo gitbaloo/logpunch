@@ -43,33 +43,6 @@ public class LoginService : ILoginService
         throw new ArgumentException("Invalid Username/Password");
     }
 
-    private string GenerateJwtToken(LogpunchUserDto user)
-    {
-        var jwtSigningCert = _configuration["JWT_KEY"];
-        if (string.IsNullOrEmpty(jwtSigningCert))
-        {
-            throw new InvalidOperationException("JWT Key is missing in the configuration.");
-        }
-        var signingCert = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningCert));
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
-            // Add other claims as needed
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JWT_ISSUER"],
-            audience: _configuration["JWT_AUDIENCE"],
-            claims: claims,
-            expires: DateTime.Now.AddDays(1),
-            signingCredentials: new SigningCredentials(signingCert, SecurityAlgorithms.HmacSha256)
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
     public async Task<LogpunchUserDto> ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -104,5 +77,32 @@ public class LoginService : ILoginService
         {
             throw new AuthenticationException("Please login again");
         }
+    }
+
+    private string GenerateJwtToken(LogpunchUserDto user)
+    {
+        var jwtSigningCert = _configuration["JWT_KEY"];
+        if (string.IsNullOrEmpty(jwtSigningCert))
+        {
+            throw new InvalidOperationException("JWT Key is missing in the configuration.");
+        }
+        var signingCert = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningCert));
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
+            // Add other claims as needed
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["JWT_ISSUER"],
+            audience: _configuration["JWT_AUDIENCE"],
+            claims: claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: new SigningCredentials(signingCert, SecurityAlgorithms.HmacSha256)
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

@@ -83,8 +83,16 @@ public class RegistrationService : IRegistrationService
         LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
             ?? throw new InvalidOperationException("Employee not found");
 
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User not found");
+
         LogpunchRegistration registration = _dbContext.Registrations.FirstOrDefault(r => r.Id == registrationId)
             ?? throw new InvalidOperationException("Registration not found");
+
+        if (user != employee && user.Role != UserRole.Admin)
+        {
+            throw new InvalidOperationException("User and employee is not the same. Only an admin can end another employees shift");
+        }
 
         if (registration.Status != RegistrationStatus.Ongoing)
         {

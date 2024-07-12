@@ -6,15 +6,22 @@ namespace Logpunch.Controllers;
 
 [ApiController]
 [Route("api/login")]
-public class LoginController(ILoginService loginService) : ControllerBase
+public class LoginController : ControllerBase
 {
+    private readonly ILoginService _loginService;
+
+    public LoginController(ILoginService loginService)
+    {
+        _loginService = loginService;
+    }
+
     [AllowAnonymous]
     [HttpPost("authorize")]
     public async Task<IActionResult> AuthorizeLogin([FromForm] string email, [FromForm] string password)
     {
         try
         {
-            var user = await loginService.AuthorizeLogin(email, password);
+            var user = await _loginService.AuthorizeLogin(email, password);
             return Ok(user);
         }
         catch (ArgumentException e)
@@ -28,7 +35,7 @@ public class LoginController(ILoginService loginService) : ControllerBase
     {
         try
         {
-            var user = await loginService.ValidateToken(token);
+            var user = await _loginService.ValidateToken(token);
             return Ok(user);
         }
         catch (Exception e)

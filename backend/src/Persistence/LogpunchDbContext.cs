@@ -68,9 +68,9 @@ public class LogpunchDbContext(DbContextOptions<LogpunchDbContext> options) : Db
                 .IsRequired();
             entity.Property(e => e.Status).HasColumnName("status_type")
                 .IsRequired();
-            entity.Property(e => e.FirstComment).HasColumnName("internal_comment")
+            entity.Property(e => e.FirstComment).HasColumnName("first_comment")
                 .IsRequired(false);
-            entity.Property(e => e.SecondComment).HasColumnName("external_comment")
+            entity.Property(e => e.SecondComment).HasColumnName("second_comment")
                 .IsRequired(false);
             entity.Property(e => e.CorrectionOfId).HasColumnName("correctionof_id")
                 .IsRequired(false);

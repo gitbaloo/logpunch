@@ -183,8 +183,8 @@ INSERT INTO
         ClientId,
         Creation_Time,
         Status_Type,
-        Internal_Comment,
-        External_Comment,
+        First_Comment,
+        Second_Comment,
         CorrectionOf_Id
     )
 VALUES (
@@ -207,8 +207,8 @@ VALUES (
         ),
         '2023-06-01 09:00:00',
         5,
-        'Internal comment 1',
-        'External comment 1',
+        'First comment 1',
+        'Second comment 1',
         NULL
     ),
     (
@@ -231,8 +231,8 @@ VALUES (
         ),
         '2024-01-02 10:00:00',
         5,
-        'Internal comment 2',
-        'External comment 2',
+        'First comment 2',
+        'Second comment 2',
         NULL
     ),
     (
@@ -255,8 +255,8 @@ VALUES (
         ),
         '2024-02-15 11:00:00',
         5,
-        'Internal comment 3',
-        'External comment 3',
+        'First comment 3',
+        'Second comment 3',
         NULL
     ),
     (
@@ -279,8 +279,8 @@ VALUES (
         ),
         '2024-02-16 08:00:00',
         5,
-        'Internal comment 4',
-        'External comment 4',
+        'First comment 4',
+        'Second comment 4',
         NULL
     ),
     (
@@ -303,8 +303,8 @@ VALUES (
         ),
         '2024-06-18 11:20:05',
         5,
-        'Internal comment 5',
-        'External comment 5',
+        'First comment 5',
+        'Second comment 5',
         NULL
     ),
     (
@@ -327,8 +327,8 @@ VALUES (
         ),
         '2024-06-18 16:24:25',
         5,
-        'Internal comment 6',
-        'External comment 6',
+        'First comment 6',
+        'Second comment 6',
         NULL
     ),
     (
@@ -351,8 +351,8 @@ VALUES (
         ),
         '2024-06-30 21:12:45',
         5,
-        'Internal comment 7',
-        'External comment 7',
+        'First comment 7',
+        'Second comment 7',
         NULL
     ),
     (
@@ -375,8 +375,8 @@ VALUES (
         ),
         '2024-07-02 15:00:00',
         5,
-        'Internal comment 8',
-        'External comment 8',
+        'First comment 8',
+        'Second comment 8',
         NULL
     ),
     (
@@ -399,8 +399,8 @@ VALUES (
         ),
         '2024-07-03 16:00:00',
         5,
-        'Internal comment 9',
-        'External comment 9',
+        'First comment 9',
+        'Second comment 9',
         NULL
     ),
     (
@@ -423,7 +423,7 @@ VALUES (
         ),
         '2024-07-09 10:00:00',
         5,
-        'Internal comment 10',
-        'External comment 10',
+        'First comment 10',
+        'Second comment 10',
         NULL
     );

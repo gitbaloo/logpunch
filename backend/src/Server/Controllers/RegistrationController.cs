@@ -42,7 +42,7 @@ public class RegistrationController : ControllerBase
         try
         {
             var userId = await GetUserIdFromToken();
-            var startShiftRegistration = await _registrationService.StartShiftRegistration(userId, request.EmployeeId, request.ClientId, request.InternalComment);
+            var startShiftRegistration = await _registrationService.StartShiftRegistration(userId, request.EmployeeId, request.ClientId, request.FirstComment);
             return Ok(startShiftRegistration);
         }
         catch (HttpRequestException ex)
@@ -57,7 +57,7 @@ public class RegistrationController : ControllerBase
         try
         {
             var userId = await GetUserIdFromToken();
-            var endShiftRegistration = await _registrationService.EndShiftRegistration(userId, request.EmployeeId, request.RegistrationId, request.SecondInternalComment);
+            var endShiftRegistration = await _registrationService.EndShiftRegistration(userId, request.EmployeeId, request.RegistrationId, request.SecondComment);
             if (endShiftRegistration is null)
             {
                 return NotFound();

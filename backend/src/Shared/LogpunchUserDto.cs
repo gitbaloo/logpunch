@@ -25,6 +25,6 @@ public class LogpunchUserDto
         LastName = "";
         Email = "";
         DefaultQuery = null;
-        Role = "em";
+        Role = "Employee";
     }
 }

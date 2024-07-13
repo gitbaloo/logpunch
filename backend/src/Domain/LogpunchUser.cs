@@ -25,4 +25,12 @@ public class LogpunchUser : Entity
         DefaultQuery = defaultQuery;
         Role = role;
     }
+
+    protected LogpunchUser()
+    {
+        FirstName = string.Empty;
+        LastName = string.Empty;
+        Email = string.Empty;
+        Password = string.Empty;
+    }
 }

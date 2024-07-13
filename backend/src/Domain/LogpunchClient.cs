@@ -13,5 +13,8 @@ public class LogpunchClient : Entity
         Name = name;
     }
 
-
+    public LogpunchClient()
+    {
+        Name = string.Empty;
+    }
 }

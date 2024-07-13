@@ -18,8 +18,5 @@ public class EmployeeClientRelation : Entity
         Client = client;
         ClientId = client.Id;
     }
-    public EmployeeClientRelation()
-    {
-
-    }
+    public EmployeeClientRelation() { }
 }

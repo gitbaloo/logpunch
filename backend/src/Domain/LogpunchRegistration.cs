@@ -43,10 +43,6 @@ namespace Domain
         [JsonIgnore]
         public LogpunchRegistration? CorrectionOf { get; set; }
 
-        public LogpunchRegistration()
-        {
-
-        }
         public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? secondInternalComment, Guid? correctionOfId)
         {
             EmployeeId = employeeId;
@@ -62,5 +58,6 @@ namespace Domain
             SecondComment = secondInternalComment;
             CorrectionOfId = correctionOfId;
         }
+        public LogpunchRegistration() { }
     }
 }

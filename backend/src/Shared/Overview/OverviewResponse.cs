@@ -1,14 +1,17 @@
 namespace Shared;
 
-public class OverviewResponse(
-    string queryString,
-    TimeModePeriodObject timeModePeriodObject,
-    TimePeriodObject timePeriodObject)
+public class OverviewResponse
 {
-    public string QueryString { get; set; } = queryString;
+    public string QueryString { get; set; }
 
+    public TimeModePeriodObject TimeModePeriodObject { get; set; }
 
-    public TimeModePeriodObject TimeModePeriodObject { get; set; } = timeModePeriodObject;
+    public TimePeriodObject TimePeriodObject { get; set; }
 
-    public TimePeriodObject TimePeriodObject { get; set; } = timePeriodObject;
+    public OverviewResponse(string queryString, TimeModePeriodObject timeModePeriodObject, TimePeriodObject timePeriodObject)
+    {
+        QueryString = queryString;
+        TimeModePeriodObject = timeModePeriodObject;
+        TimePeriodObject = timePeriodObject;
+    }
 }

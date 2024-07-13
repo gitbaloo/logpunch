@@ -3,11 +3,11 @@ namespace Shared;
 public class GroupByObject
 {
     public string Name { get; set; }
-    public double Total { get; set; }
+    public int? Total { get; set; }
     public List<ThenByObject> ThenByObjects { get; set; }
 
     // Constructor without ThenByObjects
-    public GroupByObject(string name, double total)
+    public GroupByObject(string name, int? total)
     {
         Name = name;
         Total = total;
@@ -15,7 +15,7 @@ public class GroupByObject
     }
 
     // Constructor with ThenByObjects
-    public GroupByObject(string name, double total, List<ThenByObject> thenByObjects)
+    public GroupByObject(string name, int? total, List<ThenByObject> thenByObjects)
     {
         Name = name;
         Total = total;

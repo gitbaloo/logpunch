@@ -8,7 +8,7 @@ COPY src/Server/Server.csproj ./src/Server/
 COPY src/Domain/Domain.csproj ./src/Domain/
 COPY src/Persistence/Persistence.csproj ./src/Persistence/
 COPY src/Service/Service.csproj ./src/Service/
-COPY src/Service.Tests/Service.Tests.csproj ./src/Service.Tests/
+COPY src/Logpunch.Tests/Logpunch.Tests.csproj ./src/Logpunch.Tests/
 COPY src/Shared/Shared.csproj ./src/Shared/
 
 # Restore dependencies

@@ -1,5 +1,6 @@
 using System.Formats.Asn1;
 using System.Globalization;
+using Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using Persistence;
@@ -11,19 +12,18 @@ namespace Infrastructure.Overview;
 public class OverviewService : IOverviewService
 {
     private readonly LogpunchDbContext _dbContext;
-    private readonly LoginService _loginService;
 
-    public OverviewService(LogpunchDbContext dbContext, LoginService loginService)
+    public OverviewService(LogpunchDbContext dbContext)
     {
         _dbContext = dbContext;
-        _loginService = loginService;
     }
 
-    public async Task<OverviewResponse> OverviewQuery(string token, bool sortAsc, bool showDaysWithNoRecords,
+    public async Task<OverviewResponse> OverviewQuery(Guid userId, bool sortAsc, bool showDaysWithNoRecords,
         bool setDefault, DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
-        string thenBy)
+        string thenBy, string registrationTypeString)
     {
-        var user = await _loginService.ValidateToken(token);
+        RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(registrationTypeString);
+        var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
         DateTimeOffset originalStartDate = startDate;
         DateTimeOffset nonNullableEndDate = default;
         string queryString;
@@ -37,7 +37,7 @@ public class OverviewService : IOverviewService
             queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, set_default={setDefault}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
         }
 
-        if (user == null)
+        if (user is null)
         {
             throw new ArgumentNullException(nameof(user));
         }
@@ -81,7 +81,7 @@ public class OverviewService : IOverviewService
             throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
         }
 
-        var groupByObjects = await GetGroupByObjects(groupBy, user, startDate, nonNullableEndDate, showDaysWithNoRecords);
+        var groupByObjects = await GetGroupByObjects(groupBy, user, startDate, nonNullableEndDate, showDaysWithNoRecords, registrationType);
         int total = 0;
 
         foreach (var groupByObject in groupByObjects)
@@ -130,24 +130,22 @@ public class OverviewService : IOverviewService
 
         if (setDefault)
         {
-            await SetDefaultQuery(queryString, token);
+            SetDefaultQuery(queryString, user);
         }
 
         return new OverviewResponse(queryString, timeModePeriodObject, timePeriodObject);
     }
 
-    public async Task<string> GetDefaultQuery(string token)
+    public async Task<string> GetDefaultQuery(Guid userId)
     {
-        var user = await _loginService.ValidateToken(token);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
 
-        var consultant = await _dbContext.Users.FirstOrDefaultAsync(c => c.Id == user.Id);
-
-        if (consultant is null)
+        if (user is null)
         {
-            throw new ArgumentException("Consultant not found");
+            throw new ArgumentException("User not found");
         }
 
-        var defaultQuery = consultant.DefaultQuery;
+        var defaultQuery = user.DefaultQuery;
 
         if (string.IsNullOrEmpty(defaultQuery))
         {
@@ -355,8 +353,8 @@ public class OverviewService : IOverviewService
         }
     }
 
-    private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUserDto user, DateTimeOffset StartDate,
-        DateTimeOffset EndDate, bool showDaysWithNoRecords)
+    private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset StartDate,
+        DateTimeOffset EndDate, bool showDaysWithNoRecords, RegistrationType registrationType)
     {
         List<GroupByObject> result = new List<GroupByObject>();
 
@@ -367,6 +365,7 @@ public class OverviewService : IOverviewService
 
         var rawData = await _dbContext.Registrations
         .Where(r => (r.ClientId == null || employeeClientRelationIds.Contains(r.ClientId.Value))
+                     && r.Type == registrationType
                      && r.Start >= StartDate
                      && r.Start <= EndDate)
         .OrderBy(r => r.Start).Select(r => new
@@ -563,27 +562,20 @@ public class OverviewService : IOverviewService
         return weekNumber;
     }
 
-    private async Task SetDefaultQuery(string queryString, string token)
+    private void SetDefaultQuery(string queryString, LogpunchUser user)
     {
         string newDefaultURL = "?" + queryString.Replace(" ", "").Replace("set_default=True", "set_default=False").Replace(",", "&");
 
-        var user = await _loginService.ValidateToken(token);
-
-        var consultant = await _dbContext.Users.FirstOrDefaultAsync(c => c.Id == user.Id);
-
-        if (consultant is null)
+        if (user is null)
         {
-            throw new ArgumentException("Consultant not found");
-        }
-        else if (consultant.Id == user.Id)
-        {
-            consultant.DefaultQuery = newDefaultURL;
-            _dbContext.SaveChanges();
+            throw new ArgumentException("User was null");
         }
         else
         {
-            throw new ArgumentException("Consultant not found but wasn't null");
+            user.DefaultQuery = newDefaultURL;
+            _dbContext.SaveChanges();
         }
-        Console.WriteLine(consultant.DefaultQuery);
+
+        Console.WriteLine(user.DefaultQuery);
     }
 }

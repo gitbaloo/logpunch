@@ -23,7 +23,7 @@ public class LoginServiceTests
             .Options;
 
         var mockConfiguration = new Mock<IConfiguration>();
-        mockConfiguration.Setup(c => c["JWT_KEY"]).Returns("my_secret_key_12345my_secret_key_12345"); // Updated key length to 32 characters
+        mockConfiguration.Setup(c => c["JWT_KEY"]).Returns("my_secret_key_12345my_secret_key_12345");
         mockConfiguration.Setup(c => c["JWT_ISSUER"]).Returns("my_issuer");
         mockConfiguration.Setup(c => c["JWT_AUDIENCE"]).Returns("my_audience");
 
@@ -57,7 +57,7 @@ public class LoginServiceTests
         var service = new LoginService(mockConfiguration.Object, context);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () => await service.AuthorizeLogin("test@test.com", "wrongpassword"));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.AuthorizeLogin("test@test.com", "wrongpassword"));
     }
 
     [Fact]

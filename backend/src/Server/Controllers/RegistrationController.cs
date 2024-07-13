@@ -21,6 +21,8 @@ public class RegistrationController : ControllerBase
         _loginService = loginService;
     }
 
+    // User APIs
+
     [HttpPost]
     public async Task<IActionResult> CreateRegistration([FromBody] CreateRegistrationRequest request)
     {
@@ -70,6 +72,47 @@ public class RegistrationController : ControllerBase
         }
     }
 
+    [HttpPatch("confirmation")]
+    public async Task<IActionResult> EmployeeConfirmationRegistration([FromBody] EmployeeConfirmationRegistrationRequest request)
+    {
+        try
+        {
+            var userId = await GetUserIdFromToken();
+            var confirmedRegistration = await _registrationService.EmployeeConfirmationRegistration(userId, request.RegistrationId);
+            if (confirmedRegistration is null)
+            {
+                return NotFound();
+            }
+            return Ok(confirmedRegistration);
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost("correction")]
+    public async Task<IActionResult> EmployeeCorrectionRegistration([FromBody] EmployeeCorrectionRegistrationRequest request)
+    {
+        try
+        {
+            var userId = await GetUserIdFromToken();
+            var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(userId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+            if (correctionRegistration is null)
+            {
+                return NotFound();
+            }
+            return Ok(correctionRegistration);
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+
+    // Admin APIs
+
     [HttpPatch("admin/statusupdate")]
     public async Task<IActionResult> UpdateRegistrationStatus([FromBody] UpdateStatusRequest request)
     {
@@ -103,6 +146,25 @@ public class RegistrationController : ControllerBase
                 return NotFound();
             }
             return Ok(registration);
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost("admin/correction")]
+    public async Task<IActionResult> AdminCorrectionRegistration([FromBody] AdminCorrectionRegistrationRequest request)
+    {
+        try
+        {
+            var userId = await GetUserIdFromToken();
+            var correctionRegistration = await _registrationService.AdminCorrectionRegistration(userId, request.EmployeeId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+            if (correctionRegistration is null)
+            {
+                return NotFound();
+            }
+            return Ok(correctionRegistration);
         }
         catch (HttpRequestException ex)
         {

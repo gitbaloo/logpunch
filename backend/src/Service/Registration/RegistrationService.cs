@@ -13,6 +13,8 @@ public class RegistrationService : IRegistrationService
         _dbContext = dbContext;
     }
 
+    // User functions
+
     public async Task<LogpunchRegistration> CreateRegistration(Guid userId, Guid employeeId, Guid? clientId, DateTimeOffset startTime, DateTimeOffset endTime, string? firstComment, string? secondComment)
     {
         if (startTime > endTime)
@@ -37,7 +39,7 @@ public class RegistrationService : IRegistrationService
         int totalMinutes = (int)timeSpan.TotalMinutes;
 
         RegistrationType registrationType = RegistrationType.Work;
-        RegistrationStatus registrationStatus = RegistrationStatus.Awaiting;
+        RegistrationStatus registrationStatus = RegistrationStatus.Open;
 
         var creationTime = DateTimeOffset.UtcNow;
         var startTimeUtc = startTime.ToUniversalTime();
@@ -106,7 +108,7 @@ public class RegistrationService : IRegistrationService
 
         registration.Amount = totalMinutes;
         registration.End = endTime;
-        registration.Status = RegistrationStatus.Awaiting;
+        registration.Status = RegistrationStatus.Open;
         registration.SecondComment = secondComment;
 
         await _dbContext.SaveChangesAsync();
@@ -114,10 +116,90 @@ public class RegistrationService : IRegistrationService
         return registration;
     }
 
-    public async Task<LogpunchRegistration> UpdateRegistrationStatus(Guid userId, Guid registrationId, int newStatus)
+    public async Task<LogpunchRegistration> EmployeeConfirmationRegistration(Guid userId, Guid registrationId)
     {
         LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("User not found");
+
+        LogpunchRegistration registration = _dbContext.Registrations.FirstOrDefault(r => r.Id == registrationId)
+            ?? throw new InvalidOperationException("Registration not found");
+
+        if (user.Id != registration.EmployeeId)
+        {
+            throw new InvalidOperationException("You can only confirm your own registrations");
+        }
+
+        if (registration.Status != RegistrationStatus.Open)
+        {
+            throw new InvalidOperationException("You can only confirm an open registration");
+        }
+
+        registration.Status = RegistrationStatus.Awaiting;
+
+        await _dbContext.SaveChangesAsync();
+
+        return registration;
+    }
+    public async Task<LogpunchRegistration> EmployeeCorrectionRegistration(Guid userId, DateTimeOffset start, DateTimeOffset end, Guid? clientId, string? firstComment, string? secondComment, Guid correctionOfId)
+    {
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        LogpunchRegistration existingRegistration = _dbContext.Registrations.FirstOrDefault(r => r.Id == correctionOfId)
+            ?? throw new InvalidOperationException("Registration not found");
+
+        LogpunchClient? client = default;
+
+        if (userId != existingRegistration.EmployeeId)
+        {
+            throw new InvalidOperationException("You can only make corrections of your own registrations");
+        }
+
+        if (existingRegistration.Status != RegistrationStatus.Open)
+        {
+            throw new InvalidOperationException($"You can only make corrections of an open registration. This registrations status is {existingRegistration.Status}");
+        }
+
+        if (start > end)
+        {
+            throw new InvalidOperationException("Start cannot be later than end");
+        }
+
+        if (clientId is not null)
+        {
+            client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId)
+            ?? throw new InvalidOperationException("Client not found");
+
+            EmployeeClientRelation? employeeClientRelation = _dbContext.EmployeeClientRelations.FirstOrDefault(c =>
+            c.EmployeeId == userId
+            && c.ClientId == clientId) ?? throw new InvalidOperationException("No relation exists between employee and client");
+        }
+
+
+
+        TimeSpan timeSpan = end - start;
+        int totalMinutes = (int)timeSpan.TotalMinutes;
+
+        RegistrationType registrationType = RegistrationType.Work;
+        RegistrationStatus registrationStatus = RegistrationStatus.Open;
+
+        var creationTime = DateTimeOffset.UtcNow;
+
+        var correctionRegistration = new LogpunchRegistration(user.Id, registrationType, totalMinutes, start, end, user.Id, client?.Id, creationTime, registrationStatus, firstComment, secondComment, existingRegistration.Id);
+        await _dbContext.Registrations.AddAsync(correctionRegistration);
+        await _dbContext.SaveChangesAsync();
+
+        return correctionRegistration;
+    }
+
+    // Admin functions
+
+    public async Task<LogpunchRegistration> UpdateRegistrationStatus(Guid userId, Guid registrationId, string newStatus)
+    {
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        RegistrationStatus registrationStatus = RegistrationStatusConverter.ConvertStringToEnum(newStatus);
 
         if (user.Role != UserRole.Admin)
         {
@@ -137,13 +219,14 @@ public class RegistrationService : IRegistrationService
             throw new InvalidOperationException("Invalid status value");
         }
 
-        registration.Status = (RegistrationStatus)newStatus;
+        registration.Status = registrationStatus;
 
         await _dbContext.SaveChangesAsync();
 
         return registration;
     }
-    public async Task<LogpunchRegistration> ChangeRegistrationType(Guid userId, Guid registrationId, int newType)
+
+    public async Task<LogpunchRegistration> ChangeRegistrationType(Guid userId, Guid registrationId, string newType)
     {
         LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("User not found");
@@ -156,6 +239,11 @@ public class RegistrationService : IRegistrationService
         LogpunchRegistration registration = _dbContext.Registrations.FirstOrDefault(r => r.Id == registrationId)
             ?? throw new InvalidOperationException("Registration not found");
 
+        if (registration.Type == RegistrationType.Work || RegistrationTypeConverter.ConvertStringToEnum(newType) == RegistrationType.Work)
+        {
+            throw new("Registrations can't be changed either into or from work registrations");
+        }
+
         if (registration.Status == RegistrationStatus.Settled)
         {
             throw new InvalidOperationException("Once a registration is settled its type cannot change");
@@ -166,14 +254,14 @@ public class RegistrationService : IRegistrationService
             throw new InvalidOperationException("Invalid type value");
         }
 
-        registration.Type = (RegistrationType)newType;
+        RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(newType);
 
         await _dbContext.SaveChangesAsync();
 
         return registration;
     }
 
-    public async Task<LogpunchRegistration> CreateCorrectionRegistration(Guid userId, Guid employeeId, int type, DateTimeOffset start, DateTimeOffset end, Guid? clientId, int status, string? firstComment, string? secondComment, Guid correctionOfId)
+    public async Task<LogpunchRegistration> AdminCorrectionRegistration(Guid userId, Guid employeeId, DateTimeOffset start, DateTimeOffset end, Guid? clientId, string? firstComment, string? secondComment, Guid correctionOfId)
     {
         LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("User not found");
@@ -202,18 +290,28 @@ public class RegistrationService : IRegistrationService
             && c.ClientId == clientId) ?? throw new InvalidOperationException("No relation exists between employee and client");
 
         TimeSpan timeSpan = end - start;
-        int totalMinutes = (int)timeSpan.TotalMinutes;
+        int time;
 
-        RegistrationType registrationType = RegistrationType.Work;
-        RegistrationStatus registrationStatus = RegistrationStatus.Awaiting;
+        switch (existingRegistration.Type)
+        {
+            case RegistrationType.Work:
+                time = (int)timeSpan.TotalMinutes;
+                break;
+
+            default:
+                time = (int)timeSpan.TotalDays;
+                break;
+        }
+
+        RegistrationType registrationType = existingRegistration.Type;
+        RegistrationStatus registrationStatus = existingRegistration.Status;
 
         var creationTime = DateTimeOffset.UtcNow;
 
-        var correctionRegistration = new LogpunchRegistration(employee.Id, registrationType, totalMinutes, start, end, user.Id, client.Id, creationTime, registrationStatus, firstComment, secondComment, existingRegistration.Id);
+        var correctionRegistration = new LogpunchRegistration(employee.Id, registrationType, time, start, end, user.Id, client.Id, creationTime, registrationStatus, firstComment, secondComment, existingRegistration.Id);
         await _dbContext.Registrations.AddAsync(correctionRegistration);
         await _dbContext.SaveChangesAsync();
 
         return correctionRegistration;
-
     }
 }

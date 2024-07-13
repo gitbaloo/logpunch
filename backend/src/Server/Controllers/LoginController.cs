@@ -31,17 +31,17 @@ public class LoginController : ControllerBase
     }
 
     [HttpGet("authenticate")]
-    public async Task<ActionResult> AuthenticateUser(string token)
+    public async Task<ActionResult> AuthenticateUser()
     {
         try
         {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             var user = await _loginService.ValidateToken(token);
             return Ok(user);
         }
         catch (Exception e)
         {
-            ValidationProblem(e.Message);
+            return ValidationProblem(e.Message);
         }
-        return ValidationProblem("Unable to validate user");
     }
 }

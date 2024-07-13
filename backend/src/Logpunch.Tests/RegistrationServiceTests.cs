@@ -131,7 +131,7 @@ public class RegistrationServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(RegistrationStatus.Awaiting, result.Status);
+        Assert.Equal(RegistrationStatus.Open, result.Status);
         Assert.Equal("secondComment", result.SecondComment);
     }
 
@@ -150,13 +150,13 @@ public class RegistrationServiceTests
         var registrationId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
         var clientId = Guid.NewGuid();
-        var registration = new LogpunchRegistration(employeeId, RegistrationType.Work, 60, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Awaiting, "firstComment", "secondComment", null);
+        var registration = new LogpunchRegistration(employeeId, RegistrationType.Work, 60, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, "firstComment", "secondComment", null);
         context.Users.Add(TestEntityFactory.CreateLogpunchUser(userId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin));
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.UpdateRegistrationStatus(userId, registration.Id, (int)RegistrationStatus.Settled);
+        var result = await service.UpdateRegistrationStatus(userId, registration.Id, RegistrationStatus.Settled.ToString());
 
         // Assert
         Assert.NotNull(result);
@@ -178,13 +178,13 @@ public class RegistrationServiceTests
         var registrationId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
         var clientId = Guid.NewGuid();
-        var registration = new LogpunchRegistration(employeeId, RegistrationType.Work, 60, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Awaiting, "firstComment", "secondComment", null);
+        var registration = new LogpunchRegistration(employeeId, RegistrationType.Work, 60, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, "firstComment", "secondComment", null);
         context.Users.Add(TestEntityFactory.CreateLogpunchUser(userId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin));
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.ChangeRegistrationType(userId, registration.Id, (int)RegistrationType.Vacation);
+        var result = await service.ChangeRegistrationType(userId, registration.Id, RegistrationType.Vacation.ToString());
 
         // Assert
         Assert.NotNull(result);
@@ -206,7 +206,7 @@ public class RegistrationServiceTests
         var employeeId = Guid.NewGuid();
         var clientId = Guid.NewGuid();
         var correctionOfId = Guid.NewGuid();
-        var existingRegistration = new LogpunchRegistration(employeeId, RegistrationType.Work, 60, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), userId, clientId, DateTimeOffset.UtcNow.AddHours(-2), RegistrationStatus.Awaiting, "initialComment", null, null);
+        var existingRegistration = new LogpunchRegistration(employeeId, RegistrationType.Work, 60, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), userId, clientId, DateTimeOffset.UtcNow.AddHours(-2), RegistrationStatus.Open, "initialComment", null, null);
         context.Users.Add(TestEntityFactory.CreateLogpunchUser(userId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin));
         context.Users.Add(TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee));
         context.Clients.Add(TestEntityFactory.CreateLogpunchClient(clientId, "Test Client"));
@@ -218,7 +218,7 @@ public class RegistrationServiceTests
         var end = DateTimeOffset.UtcNow;
 
         // Act
-        var result = await service.CreateCorrectionRegistration(userId, employeeId, (int)RegistrationType.Work, start, end, clientId, (int)RegistrationStatus.Awaiting, "correctedFirstComment", "correctedSecondComment", existingRegistration.Id);
+        var result = await service.AdminCorrectionRegistration(userId, employeeId, start, end, clientId, "correctedFirstComment", "correctedSecondComment", existingRegistration.Id);
 
         // Assert
         Assert.NotNull(result);

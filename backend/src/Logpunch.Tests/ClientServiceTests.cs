@@ -14,6 +14,7 @@ public class ClientServiceTests
     [Fact]
     public async Task GetClients_ReturnsClientsForEmployee()
     {
+        // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
@@ -27,12 +28,14 @@ public class ClientServiceTests
         {
             EmployeeId = employeeId,
             ClientId = clientId,
-            Client = new LogpunchClient { Id = clientId, Name = "Test Client" }
+            Client = TestEntityFactory.CreateLogpunchClient(clientId, "Test Client")
         });
         await context.SaveChangesAsync();
 
+        // Act
         var clients = await service.GetClients(employeeId);
 
+        // Assert
         Assert.Single(clients);
         Assert.Equal("Test Client", clients[0].Name);
     }
@@ -40,6 +43,7 @@ public class ClientServiceTests
     [Fact]
     public async Task GetClients_EmployeeHasNoClients_ReturnsEmptyList()
     {
+        // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
@@ -49,8 +53,10 @@ public class ClientServiceTests
 
         var employeeId = Guid.NewGuid();
 
+        // Act
         var clients = await service.GetClients(employeeId);
 
+        // Assert
         Assert.Empty(clients);
     }
 }

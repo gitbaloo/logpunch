@@ -17,29 +17,33 @@ public class LoginServiceTests
     [Fact]
     public async Task AuthorizeLogin_ValidCredentials_ReturnsToken()
     {
+        // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         var mockConfiguration = new Mock<IConfiguration>();
-        mockConfiguration.Setup(c => c["JWT_KEY"]).Returns("my_secret_key_12345");
+        mockConfiguration.Setup(c => c["JWT_KEY"]).Returns("my_secret_key_12345my_secret_key_12345"); // Updated key length to 32 characters
         mockConfiguration.Setup(c => c["JWT_ISSUER"]).Returns("my_issuer");
         mockConfiguration.Setup(c => c["JWT_AUDIENCE"]).Returns("my_audience");
 
         using var context = new LogpunchDbContext(options);
-        context.Users.Add(new LogpunchUser { Email = "test@test.com", Password = "password" });
+        context.Users.Add(TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "test@test.com", "password", "FirstName", "LastName", null, UserRole.Employee));
         await context.SaveChangesAsync();
 
         var service = new LoginService(mockConfiguration.Object, context);
 
+        // Act
         var token = await service.AuthorizeLogin("test@test.com", "password");
 
+        // Assert
         Assert.NotNull(token);
     }
 
     [Fact]
     public async Task AuthorizeLogin_InvalidCredentials_ThrowsException()
     {
+        // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
@@ -47,34 +51,38 @@ public class LoginServiceTests
         var mockConfiguration = new Mock<IConfiguration>();
 
         using var context = new LogpunchDbContext(options);
-        context.Users.Add(new LogpunchUser { Id = Guid.NewGuid(), Email = "test@test.com", Password = "password" });
+        context.Users.Add(TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "test@test.com", "password", "FirstName", "LastName", null, UserRole.Employee));
         await context.SaveChangesAsync();
 
         var service = new LoginService(mockConfiguration.Object, context);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => service.AuthorizeLogin("test@test.com", "wrongpassword"));
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(async () => await service.AuthorizeLogin("test@test.com", "wrongpassword"));
     }
 
     [Fact]
     public async Task ValidateToken_ValidToken_ReturnsUser()
     {
+        // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
             .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         var mockConfiguration = new Mock<IConfiguration>();
-        mockConfiguration.Setup(c => c["JWT_KEY"]).Returns("my_secret_key_12345");
+        mockConfiguration.Setup(c => c["JWT_KEY"]).Returns("my_secret_key_12345my_secret_key_12345"); // Updated key length to 32 characters
 
         using var context = new LogpunchDbContext(options);
-        var user = new LogpunchUser { Id = Guid.NewGuid(), Email = "test@test.com" };
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "test@test.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         var service = new LoginService(mockConfiguration.Object, context);
-        var token = service.AuthorizeLogin(user.Email, "password").Result;
+        var token = await service.AuthorizeLogin(user.Email, "password");
 
+        // Act
         var validatedUser = await service.ValidateToken(token);
 
+        // Assert
         Assert.Equal(user.Email, validatedUser.Email);
     }
 }

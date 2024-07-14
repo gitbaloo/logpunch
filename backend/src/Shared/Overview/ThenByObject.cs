@@ -5,8 +5,10 @@ public class ThenByObject
     public string Name { get; set; }
     public int? Total { get; set; }
 
-    public ThenByObject()
+    // Constructor without ThenByObjects
+    public ThenByObject(string name, int? total)
     {
-        Name = "";
+        Name = name;
+        Total = total;
     }
 }

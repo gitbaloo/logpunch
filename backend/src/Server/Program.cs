@@ -6,10 +6,12 @@ using Infrastructure.Overview;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Persistence;
 using Service.Login;
+using Newtonsoft.Json;
 
 var AllowedOrigins = "_allowedOrigins";
 
@@ -20,7 +22,12 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IOverviewService, OverviewService>();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+        options.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.None;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Configuration.AddUserSecrets<Program>();

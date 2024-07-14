@@ -49,20 +49,4 @@ public class ClientService : IClientService
 
         return clients;
     }
-
-    //     public async Task<List<int>> GetMostRecent(IQueryable<EmployeeClientRelation> dbEntry)
-    // {
-    //     var recentActivities = await _dbContext.Registrations
-    //         .Where(r => dbEntry.Any(ecr => ecr.Id == r.LogpunchTask))
-    //         .GroupBy(tr => tr.LogpunchTask)
-    //         .Select(g => new
-    //         {
-    //             ConsultantCustomerId = g.Key,
-    //             MostRecentDate = g.Max(tr => tr.RegistrationDate)
-    //         })
-    //         .OrderBy(lt => lt.MostRecentDate)
-    //         .Select(tr => tr.ConsultantCustomerId).Distinct().ToListAsync();
-
-    //     return recentActivities;
-    // }
 }

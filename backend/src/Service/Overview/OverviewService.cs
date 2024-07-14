@@ -18,6 +18,49 @@ public class OverviewService : IOverviewService
         _dbContext = dbContext;
     }
 
+    public async Task<LogpunchRegistrationDto> GetOngoingRegistration(Guid userId, Guid employeeId)
+    {
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User doesn't exist");
+
+        LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
+            ?? throw new InvalidOperationException("Employee doesn't exist");
+
+        if (user != employee || user.Role != UserRole.Admin)
+        {
+            throw new InvalidOperationException("You can only see your own ongoing registrations");
+        }
+
+        LogpunchRegistration ongoingRegistration = await _dbContext.Registrations.FirstOrDefaultAsync(or => or.Status == RegistrationStatus.Ongoing && or.EmployeeId == employeeId && or.CorrectionOfId == null)
+            ?? throw new InvalidOperationException($"{employee.FirstName} {employee.LastName} has no ongoing registration");
+
+        LogpunchRegistrationDto registrationDto = new LogpunchRegistrationDto(ongoingRegistration.Id, ongoingRegistration.EmployeeId, ongoingRegistration.Type.ToString(), ongoingRegistration.Amount, ongoingRegistration.Start, ongoingRegistration.End, ongoingRegistration.CreatorId, ongoingRegistration.ClientId, ongoingRegistration.CreationTime, ongoingRegistration.Status.ToString(), ongoingRegistration.FirstComment, ongoingRegistration.SecondComment, ongoingRegistration.CorrectionOfId);
+
+        return registrationDto;
+    }
+
+    public async Task<List<LogpunchRegistrationDto> GetUnsettledWorkRegistrations(Guid userId, Guid employeeId)
+    {
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User doesn't exist");
+
+        LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
+            ?? throw new InvalidOperationException("Employee doesn't exist");
+
+        if (user != employee || user.Role != UserRole.Admin)
+        {
+            throw new InvalidOperationException("You can only see your own ongoing registrations");
+        }
+
+        List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Work).Where(r => r.Status != RegistrationStatus.Ongoing || r.Status != RegistrationStatus.Settled).ToList();
+
+        foreach (var registration in registrations)
+        {
+
+        }
+
+    }
+
     public async Task<OverviewResponse> OverviewQuery(Guid userId, bool sortAsc, bool showDaysWithNoRecords,
         bool setDefault, DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
         string thenBy, string registrationTypeString)
@@ -577,5 +620,13 @@ public class OverviewService : IOverviewService
         }
 
         Console.WriteLine(user.DefaultQuery);
+    }
+
+    private LogpunchRegistration GetMostRecentCorrection(Guid registrationId)
+    {
+        LogpunchRegistration registration = _dbContext.Registrations.Where(r => r.CorrectionOfId == registrationId).OrderByDescending(r => r.CreationTime).FirstOrDefault()
+            ?? throw new InvalidOperationException("No corrections of given registration exists");
+
+        return registration;
     }
 }

@@ -213,7 +213,7 @@ public class OverviewService : IOverviewService
             throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
         }
 
-        var groupByObjects = await GetGroupByObjects(groupBy, user, startDate, nonNullableEndDate, showDaysWithNoRecords, registrationType);
+        var groupByObjects = await GetGroupByObjects(groupBy, user, startDate, nonNullableEndDate, showDaysWithNoRecords, registrationType, thenBy);
         int total = 0;
 
         foreach (var groupByObject in groupByObjects)
@@ -485,8 +485,8 @@ public class OverviewService : IOverviewService
         }
     }
 
-    private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset StartDate,
-    DateTimeOffset EndDate, bool showDaysWithNoRecords, RegistrationType registrationType)
+    private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset startDate,
+    DateTimeOffset endDate, bool showDaysWithNoRecords, RegistrationType registrationType, string thenBy)
     {
         List<GroupByObject> result = new List<GroupByObject>();
 
@@ -498,8 +498,8 @@ public class OverviewService : IOverviewService
         var rawData = await _dbContext.Registrations
             .Where(r => (r.ClientId == null || employeeClientRelationIds.Contains(r.ClientId.Value))
                          && r.Type == registrationType
-                         && r.Start >= StartDate
-                         && r.Start <= EndDate)
+                         && r.Start >= startDate
+                         && r.Start <= endDate)
             .OrderBy(r => r.Start)
             .Select(r => new
             {
@@ -510,103 +510,187 @@ public class OverviewService : IOverviewService
             })
             .ToListAsync();
 
-        var correctedData = new List<(DateTimeOffset Start, int? Amount, Guid? ClientId)>();
+        var correctedData = new List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)>();
 
         foreach (var registration in rawData)
         {
             var correction = await GetMostRecentCorrection(registration.Id);
             if (correction is not null)
             {
-                correctedData.Add((correction.Start, correction.Amount, correction.ClientId));
+                correctedData.Add((registration.Id, correction.Start, correction.Amount, correction.ClientId));
             }
             else
             {
-                correctedData.Add((registration.Start, registration.Amount, registration.ClientId));
+                correctedData.Add((registration.Id, registration.Start, registration.Amount, registration.ClientId));
             }
         }
 
-        switch (groupBy)
+        result = groupBy switch
         {
-            case "day":
-                result = correctedData
-                    .GroupBy(r => r.Start.Date)
-                    .Select(group => new GroupByObject(
-                        group.Key.ToString("dd/MM/yyyy"),
-                        group.Sum(item => item.Amount ?? 0),
-                        new List<ThenByObject>()
-                    ))
-                    .ToList();
+            "day" => GroupByDay(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
+            "week" => GroupByWeek(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
+            "month" => GroupByMonth(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
+            "year" => GroupByYear(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
+            "client" => await GroupByClient(correctedData, employeeClientRelationIds, startDate, endDate, thenBy),
+            _ => throw new ArgumentException($"Invalid groupby option selected: {groupBy}")
+        };
 
-                if (showDaysWithNoRecords)
-                {
-                    var allDates = Enumerable.Range(0, 1 + EndDate.Subtract(StartDate).Days)
-                    .Select(offset => StartDate.AddDays(offset))
-                    .Select(date => date.ToString("dd/MM/yyyy"));
+        return result;
+    }
 
-                    var missingDates = allDates.Except(result.Select(r => r.Name));
+    private List<GroupByObject> GroupByDay(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
+        bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+    {
+        var result = correctedData
+            .GroupBy(r => r.Start.Date)
+            .Select(group => new GroupByObject(
+                group.Key.ToString("dd/MM/yyyy"),
+                group.Sum(item => item.Amount ?? 0),
+                GetThenByObjects(group, thenBy)
+            ))
+            .ToList();
 
-                    var missingGroupByObjects = missingDates.Select(date => new GroupByObject(date, 0, new List<ThenByObject>()));
+        if (showDaysWithNoRecords)
+        {
+            var allDates = Enumerable.Range(0, 1 + endDate.Subtract(startDate).Days)
+            .Select(offset => startDate.AddDays(offset))
+            .Select(date => date.ToString("dd/MM/yyyy"));
 
-                    result.AddRange(missingGroupByObjects);
-                    result = result.OrderBy(r => DateTimeOffset.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
-                }
-                break;
-            case "week":
-                result = correctedData
-                    .GroupBy(r => new { r.Start.Year, Week = GetDanishWeekNumber(r.Start) })
-                    .Select(g => new GroupByObject(
-                        $"Week {g.Key.Week}, {g.Key.Year}",
-                        g.Sum(item => item.Amount ?? 0),
-                        new List<ThenByObject>()
-                    ))
-                    .ToList();
-                break;
-            case "month":
-                result = correctedData
-                    .GroupBy(r => new { r.Start.Year, r.Start.Month })
-                    .Select(g => new GroupByObject(
-                        CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month) + $" {g.Key.Year}",
-                        g.Sum(r => r.Amount ?? 0),
-                        new List<ThenByObject>()
-                    ))
-                    .ToList();
-                break;
-            case "year":
-                result = correctedData
-                    .GroupBy(r => new { r.Start.Year })
-                    .Select(g => new GroupByObject(
-                        g.Key.Year.ToString(),
-                        g.Sum(r => r.Amount ?? 0),
-                        new List<ThenByObject>()
-                    ))
-                    .ToList();
-                break;
-            case "client":
-                result = await _dbContext.Registrations
-                    .Join(_dbContext.EmployeeClientRelations,
-                        r => r.ClientId,
-                        ecr => ecr.ClientId,
-                        (r, ecr) => new { r, ecr })
-                    .Join(_dbContext.Clients,
-                        joined => joined.ecr.ClientId,
-                        c => c.Id,
-                        (joined, c) => new { joined.r, joined.ecr, c })
-                    .Where(joined => (joined.r.ClientId == null || employeeClientRelationIds.Contains(joined.ecr.ClientId))
-                                     && joined.r.Start >= StartDate
-                                     && joined.r.Start <= EndDate)
-                    .GroupBy(joined => joined.c.Name ?? "No Client")
-                    .Select(group => new GroupByObject(
-                        group.Key,
-                        group.Sum(item => item.r.Amount ?? 0),
-                        new List<ThenByObject>()
-                    ))
-                    .ToListAsync();
-                break;
+            var missingDates = allDates.Except(result.Select(r => r.Name));
+
+            var missingGroupByObjects = missingDates.Select(date => new GroupByObject(date, 0, new List<ThenByObject>()));
+
+            result.AddRange(missingGroupByObjects);
+            result = result.OrderBy(r => DateTimeOffset.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
         }
 
         return result;
     }
 
+    private List<GroupByObject> GroupByWeek(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
+        bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+    {
+        var result = correctedData
+            .GroupBy(r => new { r.Start.Year, Week = GetDanishWeekNumber(r.Start) })
+            .Select(g => new GroupByObject(
+                $"Week {g.Key.Week}, {g.Key.Year}",
+                g.Sum(item => item.Amount ?? 0),
+                GetThenByObjects(g.Select(x => (x.Id, x.Start, x.Amount, x.ClientId)), thenBy)
+            ))
+            .ToList();
+
+        return result;
+    }
+
+    private List<GroupByObject> GroupByMonth(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
+        bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+    {
+        var result = correctedData
+            .GroupBy(r => new { r.Start.Year, r.Start.Month })
+            .Select(g => new GroupByObject(
+                CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month) + $" {g.Key.Year}",
+                g.Sum(r => r.Amount ?? 0),
+                GetThenByObjects(g.Select(x => (x.Id, x.Start, x.Amount, x.ClientId)), thenBy)
+            ))
+            .ToList();
+
+        return result;
+    }
+
+    private List<GroupByObject> GroupByYear(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
+        bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+    {
+        var result = correctedData
+            .GroupBy(r => new { r.Start.Year })
+            .Select(g => new GroupByObject(
+                g.Key.Year.ToString(),
+                g.Sum(r => r.Amount ?? 0),
+                GetThenByObjects(g.Select(x => (x.Id, x.Start, x.Amount, x.ClientId)), thenBy)
+            ))
+            .ToList();
+
+        return result;
+    }
+
+    private async Task<List<GroupByObject>> GroupByClient(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
+    List<Guid> employeeClientRelationIds, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+    {
+        var groupedData = await _dbContext.Registrations
+            .Join(_dbContext.EmployeeClientRelations,
+                r => r.ClientId,
+                ecr => ecr.ClientId,
+                (r, ecr) => new { r, ecr })
+            .Join(_dbContext.Clients,
+                joined => joined.ecr.ClientId,
+                c => c.Id,
+                (joined, c) => new { joined.r, joined.ecr, c })
+            .Where(joined => (joined.r.ClientId == null || employeeClientRelationIds.Contains(joined.ecr.ClientId))
+                             && joined.r.Start >= startDate
+                             && joined.r.Start <= endDate)
+            .Select(joined => new
+            {
+                joined.r.Id,
+                joined.r.Start,
+                joined.r.Amount,
+                joined.r.ClientId,
+                ClientName = joined.c.Name ?? "No Client"
+            })
+            .ToListAsync();
+
+        var correctedGroupedData = new List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId, string ClientName)>();
+
+        foreach (var data in groupedData)
+        {
+            var correction = await GetMostRecentCorrection(data.Id);
+            if (correction is not null)
+            {
+                correctedGroupedData.Add((data.Id, correction.Start, correction.Amount, correction.ClientId, data.ClientName));
+            }
+            else
+            {
+                correctedGroupedData.Add((data.Id, data.Start, data.Amount, data.ClientId, data.ClientName));
+            }
+        }
+
+        var result = correctedGroupedData
+            .GroupBy(g => g.ClientName)
+            .Select(group => new GroupByObject(
+                group.Key,
+                group.Sum(item => item.Amount ?? 0),
+                GetThenByObjects(group.Select(x => (x.Id, x.Start, x.Amount, x.ClientId)), thenBy)
+            ))
+            .ToList();
+
+        return result;
+    }
+
+    private List<ThenByObject> GetThenByObjects(IEnumerable<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> group, string thenBy)
+    {
+        return thenBy switch
+        {
+            "day" => group
+                .GroupBy(g => g.Start.Date)
+                .Select(g => new ThenByObject(g.Key.ToString("dd/MM/yyyy"), g.Sum(i => i.Amount ?? 0)))
+                .ToList(),
+            "week" => group
+                .GroupBy(g => new { g.Start.Year, Week = GetDanishWeekNumber(g.Start) })
+                .Select(g => new ThenByObject($"Week {g.Key.Week}, {g.Key.Year}", g.Sum(i => i.Amount ?? 0)))
+                .ToList(),
+            "month" => group
+                .GroupBy(g => new { g.Start.Year, g.Start.Month })
+                .Select(g => new ThenByObject(CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month) + $" {g.Key.Year}", g.Sum(i => i.Amount ?? 0)))
+                .ToList(),
+            "year" => group
+                .GroupBy(g => new { g.Start.Year })
+                .Select(g => new ThenByObject(g.Key.Year.ToString(), g.Sum(i => i.Amount ?? 0)))
+                .ToList(),
+            "client" => group
+                .GroupBy(g => g.ClientId.ToString())
+                .Select(g => new ThenByObject(g.Key ?? "No Client", g.Sum(i => i.Amount ?? 0)))
+                .ToList(),
+            _ => new List<ThenByObject>()
+        };
+    }
     private bool IsGroupByValid(string groupBy, DateTimeOffset startDate, DateTimeOffset endDate)
     {
         switch (groupBy)

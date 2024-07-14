@@ -426,4 +426,25 @@ VALUES (
         'First comment 10',
         'Second comment 10',
         NULL
+    ),
+    (
+        uuid_generate_v4 (),
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        1,
+        5,
+        '2024-07-08 00:00:00',
+        '2024-07-13 00:00:00',
+        (
+            SELECT EmployeeId
+            FROM Employee
+        ),
+        null,
+        '2024-07-09 10:00:00',
+        3,
+        'First comment 11',
+        'Second comment 11',
+        NULL
     );

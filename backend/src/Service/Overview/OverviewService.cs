@@ -1,5 +1,6 @@
 using System.Formats.Asn1;
 using System.Globalization;
+using System.Reflection.Metadata.Ecma335;
 using Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
@@ -18,7 +19,7 @@ public class OverviewService : IOverviewService
         _dbContext = dbContext;
     }
 
-    public async Task<LogpunchRegistrationDto> GetOngoingRegistration(Guid userId, Guid employeeId)
+    public async Task<LogpunchRegistrationDto?> GetOngoingRegistration(Guid userId, Guid employeeId)
     {
         LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("User doesn't exist");
@@ -26,20 +27,24 @@ public class OverviewService : IOverviewService
         LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
             ?? throw new InvalidOperationException("Employee doesn't exist");
 
-        if (user != employee || user.Role != UserRole.Admin)
+        if (user != employee && user.Role != UserRole.Admin)
         {
             throw new InvalidOperationException("You can only see your own ongoing registrations");
         }
 
-        LogpunchRegistration ongoingRegistration = await _dbContext.Registrations.FirstOrDefaultAsync(or => or.Status == RegistrationStatus.Ongoing && or.EmployeeId == employeeId && or.CorrectionOfId == null)
-            ?? throw new InvalidOperationException($"{employee.FirstName} {employee.LastName} has no ongoing registration");
+        LogpunchRegistration? ongoingRegistration = await _dbContext.Registrations.FirstOrDefaultAsync(or => or.Status == RegistrationStatus.Ongoing && or.EmployeeId == employeeId && or.CorrectionOfId == null && or.Type == RegistrationType.Work);
 
-        LogpunchRegistrationDto registrationDto = new LogpunchRegistrationDto(ongoingRegistration.Id, ongoingRegistration.EmployeeId, ongoingRegistration.Type.ToString(), ongoingRegistration.Amount, ongoingRegistration.Start, ongoingRegistration.End, ongoingRegistration.CreatorId, ongoingRegistration.ClientId, ongoingRegistration.CreationTime, ongoingRegistration.Status.ToString(), ongoingRegistration.FirstComment, ongoingRegistration.SecondComment, ongoingRegistration.CorrectionOfId);
+        if (ongoingRegistration is null)
+        {
+            return null;
+        }
+
+        LogpunchRegistrationDto? registrationDto = new(ongoingRegistration.Id, ongoingRegistration.EmployeeId, ongoingRegistration.Type.ToString(), ongoingRegistration.Amount, ongoingRegistration.Start, ongoingRegistration.End, ongoingRegistration.CreatorId, ongoingRegistration.ClientId, ongoingRegistration.CreationTime, ongoingRegistration.Status.ToString(), ongoingRegistration.FirstComment, ongoingRegistration.SecondComment, ongoingRegistration.CorrectionOfId);
 
         return registrationDto;
     }
 
-    public async Task<List<LogpunchRegistrationDto> GetUnsettledWorkRegistrations(Guid userId, Guid employeeId)
+    public async Task<List<LogpunchRegistrationDto>> GetUnsettledWorkRegistrations(Guid userId, Guid employeeId)
     {
         LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("User doesn't exist");
@@ -47,25 +52,109 @@ public class OverviewService : IOverviewService
         LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
             ?? throw new InvalidOperationException("Employee doesn't exist");
 
-        if (user != employee || user.Role != UserRole.Admin)
+        if (user != employee && user.Role != UserRole.Admin)
         {
-            throw new InvalidOperationException("You can only see your own ongoing registrations");
+            throw new InvalidOperationException("You can only see your own registrations");
         }
 
-        List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Work).Where(r => r.Status != RegistrationStatus.Ongoing || r.Status != RegistrationStatus.Settled).ToList();
+        List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Work && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Ongoing || r.Status != RegistrationStatus.Settled).ToList();
+
+        List<LogpunchRegistrationDto> registrationDtos = [];
 
         foreach (var registration in registrations)
         {
+            var correction = await GetMostRecentCorrection(registration.Id);
 
+            if (correction is not null)
+            {
+                LogpunchRegistrationDto registrationDto = new(registration.Id, registration.EmployeeId, registration.Type.ToString(), correction.Amount, correction.Start, correction.End, registration.CreatorId, registration.ClientId, registration.CreationTime, registration.Status.ToString(), correction.FirstComment, correction.SecondComment, null);
+                registrationDtos.Add(registrationDto);
+            }
+            else
+            {
+                LogpunchRegistrationDto registrationDto = new(registration.Id, registration.EmployeeId, registration.Type.ToString(), registration.Amount, registration.Start, registration.End, registration.CreatorId, registration.ClientId, registration.CreationTime, registration.Status.ToString(), registration.FirstComment, registration.SecondComment, null);
+                registrationDtos.Add(registrationDto);
+            }
         }
 
+        return registrationDtos;
     }
 
-    public async Task<OverviewResponse> OverviewQuery(Guid userId, bool sortAsc, bool showDaysWithNoRecords,
-        bool setDefault, DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
-        string thenBy, string registrationTypeString)
+    public async Task<List<LogpunchRegistrationDto>> GetUnsettledAbsenceRegistrations(Guid userId, Guid employeeId)
     {
-        RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(registrationTypeString);
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User doesn't exist");
+
+        LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
+            ?? throw new InvalidOperationException("Employee doesn't exist");
+
+        if (user != employee && user.Role != UserRole.Admin)
+        {
+            throw new InvalidOperationException("You can only see your own registrations");
+        }
+
+        List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type != RegistrationType.Work && r.Type != RegistrationType.Transportation && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Settled).ToList();
+
+        List<LogpunchRegistrationDto> registrationDtos = [];
+
+        foreach (var registration in registrations)
+        {
+            var correction = await GetMostRecentCorrection(registration.Id);
+
+            if (correction is not null)
+            {
+                LogpunchRegistrationDto registrationDto = new(registration.Id, registration.EmployeeId, registration.Type.ToString(), correction.Amount, correction.Start, correction.End, registration.CreatorId, registration.ClientId, registration.CreationTime, registration.Status.ToString(), correction.FirstComment, correction.SecondComment, null);
+                registrationDtos.Add(registrationDto);
+            }
+            else
+            {
+                LogpunchRegistrationDto registrationDto = new(registration.Id, registration.EmployeeId, registration.Type.ToString(), registration.Amount, registration.Start, registration.End, registration.CreatorId, registration.ClientId, registration.CreationTime, registration.Status.ToString(), registration.FirstComment, registration.SecondComment, null);
+                registrationDtos.Add(registrationDto);
+            }
+        }
+
+        return registrationDtos;
+    }
+    public async Task<List<LogpunchRegistrationDto>> GetUnsettledTransportationRegistrations(Guid userId, Guid employeeId)
+    {
+        LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new InvalidOperationException("User doesn't exist");
+
+        LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
+            ?? throw new InvalidOperationException("Employee doesn't exist");
+
+        if (user != employee && user.Role != UserRole.Admin)
+        {
+            throw new InvalidOperationException("You can only see your own registrations");
+        }
+
+        List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Transportation && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Settled).ToList();
+
+        List<LogpunchRegistrationDto> registrationDtos = [];
+
+        foreach (var registration in registrations)
+        {
+            var correction = await GetMostRecentCorrection(registration.Id);
+
+            if (correction is not null)
+            {
+                LogpunchRegistrationDto registrationDto = new(registration.Id, registration.EmployeeId, registration.Type.ToString(), correction.Amount, correction.Start, correction.End, registration.CreatorId, registration.ClientId, registration.CreationTime, registration.Status.ToString(), correction.FirstComment, correction.SecondComment, null);
+                registrationDtos.Add(registrationDto);
+            }
+            else
+            {
+                LogpunchRegistrationDto registrationDto = new(registration.Id, registration.EmployeeId, registration.Type.ToString(), registration.Amount, registration.Start, registration.End, registration.CreatorId, registration.ClientId, registration.CreationTime, registration.Status.ToString(), registration.FirstComment, registration.SecondComment, null);
+                registrationDtos.Add(registrationDto);
+            }
+        }
+
+        return registrationDtos;
+    }
+    public async Task<OverviewResponse> WorkOverviewQuery(Guid userId, bool sortAsc, bool showDaysWithNoRecords,
+        bool setDefault, DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
+        string thenBy)
+    {
+        RegistrationType registrationType = RegistrationType.Work;
         var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
         DateTimeOffset originalStartDate = startDate;
         DateTimeOffset nonNullableEndDate = default;
@@ -164,12 +253,12 @@ public class OverviewService : IOverviewService
         }
         string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {timespanEndDate}";
 
-        TimeModePeriodObject timeModePeriodObject = new TimeModePeriodObject(
+        TimeModePeriodObject timeModePeriodObject = new(
             timeModePeriodName,
             timespan,
             total);
 
-        TimePeriodObject timePeriodObject = new TimePeriodObject(groupByObjects);
+        TimePeriodObject timePeriodObject = new(groupByObjects);
 
         if (setDefault)
         {
@@ -399,7 +488,7 @@ public class OverviewService : IOverviewService
     private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset StartDate,
         DateTimeOffset EndDate, bool showDaysWithNoRecords, RegistrationType registrationType)
     {
-        List<GroupByObject> result = new List<GroupByObject>();
+        List<GroupByObject> result = [];
 
         var employeeClientRelationIds = await _dbContext.EmployeeClientRelations
             .Where(ecr => ecr.EmployeeId == user.Id)
@@ -447,7 +536,7 @@ public class OverviewService : IOverviewService
 
                     var missingDates = allDates.Except(result.Select(r => r.Name));
 
-                    var missingGroupByObjects = missingDates.Select(date => new GroupByObject(date, 0, new List<ThenByObject>()));
+                    var missingGroupByObjects = missingDates.Select(date => new GroupByObject(date, 0, []));
 
                     result.AddRange(missingGroupByObjects);
                     result = result.OrderBy(r => DateTimeOffset.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
@@ -465,7 +554,7 @@ public class OverviewService : IOverviewService
                 .Select(g => new GroupByObject(
                     $"Week {g.Key.Week}, {g.Key.Year}",
                     g.Sum(item => item.Amount ?? 0),
-                    new List<ThenByObject>()
+                    []
                 ))
                 .ToList();
 
@@ -483,7 +572,7 @@ public class OverviewService : IOverviewService
                 .Select(g => new GroupByObject(
                     CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month) + $" {g.Key.Year}",
                     g.Sum(r => r.Amount ?? 0),
-                    new List<ThenByObject>()
+                    []
                 ))
                 .ToList();
 
@@ -500,7 +589,7 @@ public class OverviewService : IOverviewService
                 .Select(g => new GroupByObject(
                     g.Key.Year.ToString(),
                     g.Sum(r => r.Amount ?? 0),
-                    new List<ThenByObject>()
+                    []
                 ))
                 .ToList();
 
@@ -598,7 +687,7 @@ public class OverviewService : IOverviewService
 
     private int GetDanishWeekNumber(DateTimeOffset dateTimeOffset)
     {
-        CultureInfo danishCulture = new CultureInfo("da-DK");
+        CultureInfo danishCulture = new("da-DK");
         Calendar calendar = danishCulture.Calendar;
 
         int weekNumber = calendar.GetWeekOfYear(dateTimeOffset.DateTime, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
@@ -622,10 +711,9 @@ public class OverviewService : IOverviewService
         Console.WriteLine(user.DefaultQuery);
     }
 
-    private LogpunchRegistration GetMostRecentCorrection(Guid registrationId)
+    private async Task<LogpunchRegistration?> GetMostRecentCorrection(Guid registrationId)
     {
-        LogpunchRegistration registration = _dbContext.Registrations.Where(r => r.CorrectionOfId == registrationId).OrderByDescending(r => r.CreationTime).FirstOrDefault()
-            ?? throw new InvalidOperationException("No corrections of given registration exists");
+        LogpunchRegistration? registration = await _dbContext.Registrations.Where(r => r.CorrectionOfId == registrationId).OrderByDescending(r => r.CreationTime).FirstOrDefaultAsync();
 
         return registration;
     }

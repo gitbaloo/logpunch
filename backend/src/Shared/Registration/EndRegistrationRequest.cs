@@ -1,6 +1,6 @@
 namespace Shared;
 
-public class EndShiftRegistrationRequest
+public class EndRegistrationRequest
 {
     public Guid EmployeeId { get; set; }
     public Guid RegistrationId { get; set; }

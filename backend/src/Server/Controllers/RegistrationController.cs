@@ -23,13 +23,15 @@ public class RegistrationController : ControllerBase
 
     // User APIs
 
-    [HttpPost]
-    public async Task<IActionResult> CreateRegistration([FromBody] CreateRegistrationRequest request)
+    [HttpPost("work/create")]
+    public async Task<IActionResult> CreateWorkRegistration([FromBody] CreateRegistrationRequest request)
     {
         try
         {
-            var userId = await GetUserIdFromToken();
-            var registration = await _registrationService.CreateRegistration(userId, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var registration = await _registrationService.CreateWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
             return Ok(registration);
         }
         catch (HttpRequestException ex)
@@ -38,13 +40,15 @@ public class RegistrationController : ControllerBase
         }
     }
 
-    [HttpPost("shift/start")]
-    public async Task<IActionResult> StartShiftRegistration([FromBody] StartShiftRegistrationRequest request)
+    [HttpPost("work/start")]
+    public async Task<IActionResult> StartShiftRegistration([FromBody] StartRegistrationRequest request)
     {
         try
         {
-            var userId = await GetUserIdFromToken();
-            var startShiftRegistration = await _registrationService.StartShiftRegistration(userId, request.EmployeeId, request.ClientId, request.FirstComment);
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var startShiftRegistration = await _registrationService.StartWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
             return Ok(startShiftRegistration);
         }
         catch (HttpRequestException ex)
@@ -53,13 +57,15 @@ public class RegistrationController : ControllerBase
         }
     }
 
-    [HttpPatch("shift/end")]
-    public async Task<IActionResult> EndShiftRegistration([FromBody] EndShiftRegistrationRequest request)
+    [HttpPatch("work/end")]
+    public async Task<IActionResult> EndShiftRegistration([FromBody] EndRegistrationRequest request)
     {
         try
         {
-            var userId = await GetUserIdFromToken();
-            var endShiftRegistration = await _registrationService.EndShiftRegistration(userId, request.EmployeeId, request.RegistrationId, request.SecondComment);
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var endShiftRegistration = await _registrationService.EndWorkRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
             if (endShiftRegistration is null)
             {
                 return NotFound();
@@ -72,13 +78,71 @@ public class RegistrationController : ControllerBase
         }
     }
 
+    [HttpPost("transportation/create")]
+    public async Task<IActionResult> CreateTransportationRegistration([FromBody] CreateRegistrationRequest request)
+    {
+        try
+        {
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var registration = await _registrationService.CreateTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+            return Ok(registration);
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost("transportation/start")]
+    public async Task<IActionResult> StartTransportationRegistration([FromBody] StartRegistrationRequest request)
+    {
+        try
+        {
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var startShiftRegistration = await _registrationService.StartTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
+            return Ok(startShiftRegistration);
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPatch("transportation/end")]
+    public async Task<IActionResult> EndTransportationRegistration([FromBody] EndRegistrationRequest request)
+    {
+        try
+        {
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var endShiftRegistration = await _registrationService.EndTransportationRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
+            if (endShiftRegistration is null)
+            {
+                return NotFound();
+            }
+            return Ok(endShiftRegistration);
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+
     [HttpPatch("confirmation")]
     public async Task<IActionResult> EmployeeConfirmationRegistration([FromBody] EmployeeConfirmationRegistrationRequest request)
     {
         try
         {
-            var userId = await GetUserIdFromToken();
-            var confirmedRegistration = await _registrationService.EmployeeConfirmationRegistration(userId, request.RegistrationId);
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var confirmedRegistration = await _registrationService.EmployeeConfirmationRegistration(user.Id, request.RegistrationId);
             if (confirmedRegistration is null)
             {
                 return NotFound();
@@ -96,8 +160,10 @@ public class RegistrationController : ControllerBase
     {
         try
         {
-            var userId = await GetUserIdFromToken();
-            var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(userId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+
+            var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(user.Id, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
             if (correctionRegistration is null)
             {
                 return NotFound();
@@ -118,9 +184,10 @@ public class RegistrationController : ControllerBase
     {
         try
         {
-            var userId = await GetUserIdFromToken();
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
 
-            var registration = await _registrationService.UpdateRegistrationStatus(userId, request.RegistrationId, request.Status);
+            var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Status);
             if (registration is null)
             {
                 return NotFound();
@@ -138,9 +205,10 @@ public class RegistrationController : ControllerBase
     {
         try
         {
-            var userId = await GetUserIdFromToken();
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
 
-            var registration = await _registrationService.UpdateRegistrationStatus(userId, request.RegistrationId, request.Type);
+            var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Type);
             if (registration is null)
             {
                 return NotFound();
@@ -158,8 +226,9 @@ public class RegistrationController : ControllerBase
     {
         try
         {
-            var userId = await GetUserIdFromToken();
-            var correctionRegistration = await _registrationService.AdminCorrectionRegistration(userId, request.EmployeeId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            var user = await _loginService.ValidateToken(token);
+            var correctionRegistration = await _registrationService.AdminCorrectionRegistration(user.Id, request.EmployeeId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
             if (correctionRegistration is null)
             {
                 return NotFound();
@@ -170,13 +239,5 @@ public class RegistrationController : ControllerBase
         {
             return StatusCode(500, ex.Message);
         }
-    }
-
-
-    private async Task<Guid> GetUserIdFromToken()
-    {
-        var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-        var user = await _loginService.ValidateToken(token);
-        return user.Id;
     }
 }

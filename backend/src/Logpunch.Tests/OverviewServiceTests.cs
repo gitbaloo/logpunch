@@ -28,7 +28,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow;
 
         // Act
-        var response = await service.OverviewQuery(userId, true, false, false, startDate, endDate, "custom", "custom", "day", "none", "Work");
+        var response = await service.WorkOverviewQuery(userId, true, false, false, startDate, endDate, "custom", "custom", "day", "none", "Work");
 
         // Assert
         Assert.NotNull(response);

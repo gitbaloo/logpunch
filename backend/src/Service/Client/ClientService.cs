@@ -33,7 +33,7 @@ public class ClientService : IClientService
         {
             if (employeeClientRelation.Client is not null)
             {
-                LogpunchClientDto client = new LogpunchClientDto()
+                LogpunchClientDto client = new()
                 {
                     Id = employeeClientRelation.ClientId,
                     Name = employeeClientRelation.Client.Name

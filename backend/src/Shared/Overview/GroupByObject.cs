@@ -11,7 +11,7 @@ public class GroupByObject
     {
         Name = name;
         Total = total;
-        ThenByObjects = new List<ThenByObject>(); // Initialize with empty list or null based on your requirement
+        ThenByObjects = []; // Initialize with empty list or null based on your requirement
     }
 
     // Constructor with ThenByObjects

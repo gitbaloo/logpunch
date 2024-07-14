@@ -94,9 +94,11 @@ public class LoginService : ILoginService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
-            // Add other claims as needed
+            new Claim(JwtRegisteredClaimNames.Name, user.FirstName),
+            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role)
         };
 
         var token = new JwtSecurityToken(

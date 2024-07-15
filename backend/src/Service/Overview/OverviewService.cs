@@ -159,12 +159,12 @@ namespace Infrastructure
 
             if (timePeriod != "custom" && endDate is null)
             {
-                startDate = FindStartDateOfTimePeriod(startDate, timePeriod, timeMode);
-                endDate = FindEndDate(originalStartDate, startDate, timePeriod, timeMode);
+                startDate = CalenderService.SetMinTimeOnDate(FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
+                endDate = CalenderService.SetMaxTimeOnDate(FindEndDate(originalStartDate, startDate, timePeriod, timeMode));
             }
             else if (timePeriod == "custom" && endDate is null)
             {
-                startDate = FindStartDateOfTimePeriod(startDate, timePeriod, timeMode);
+                startDate = CalenderService.SetMinTimeOnDate(FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
                 endDate = DateTimeOffset.Now;
             }
 
@@ -775,7 +775,7 @@ namespace Infrastructure
         }
 
         private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset startDate,
-        DateTimeOffset endDate, bool showDaysWithNoRecords, RegistrationType registrationType, string thenBy)
+            DateTimeOffset endDate, bool showDaysWithNoRecords, RegistrationType registrationType, string thenBy)
         {
             List<GroupByObject> result = new List<GroupByObject>();
 
@@ -784,48 +784,44 @@ namespace Infrastructure
                 .Select(ecr => ecr.ClientId)
                 .ToListAsync();
 
-            var rawData = await _dbContext.Registrations
+            var allRegistrations = await _dbContext.Registrations
                 .Where(r => (r.ClientId == null || employeeClientRelationIds.Contains(r.ClientId.Value))
                              && r.Type == registrationType
                              && r.Start >= startDate
-                             && r.Start <= endDate)
+                             && r.Start <= endDate
+                             && r.CorrectionOfId == null)
                 .OrderBy(r => r.Start)
                 .Select(r => new
                 {
                     r.Id,
                     r.Start,
                     r.Amount,
-                    r.ClientId
+                    r.ClientId,
                 })
                 .ToListAsync();
 
-            var correctedData = new List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)>();
+            var dataList = new List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)>();
 
-            foreach (var registration in rawData)
+            foreach (var registration in allRegistrations)
             {
-                var correction = await GetMostRecentCorrection(registration.Id);
-                if (correction is not null)
-                {
-                    correctedData.Add((registration.Id, correction.Start, correction.Amount, correction.ClientId));
-                }
-                else
-                {
-                    correctedData.Add((registration.Id, registration.Start, registration.Amount, registration.ClientId));
-                }
+                dataList.Add((registration.Id, registration.Start, registration.Amount, registration.ClientId));
             }
+
+            var data = dataList.ToList();
 
             result = groupBy switch
             {
-                "day" => GroupByDay(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "week" => GroupByWeek(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "month" => GroupByMonth(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "year" => GroupByYear(correctedData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "client" => await GroupByClient(correctedData, employeeClientRelationIds, startDate, endDate, thenBy),
+                "day" => GroupByDay(data, showDaysWithNoRecords, startDate, endDate, thenBy),
+                "week" => GroupByWeek(data, showDaysWithNoRecords, startDate, endDate, thenBy),
+                "month" => GroupByMonth(data, showDaysWithNoRecords, startDate, endDate, thenBy),
+                "year" => GroupByYear(data, showDaysWithNoRecords, startDate, endDate, thenBy),
+                "client" => await GroupByClient(data, employeeClientRelationIds, startDate, endDate, thenBy),
                 _ => throw new ArgumentException($"Invalid groupby option selected: {groupBy}")
             };
 
             return result;
         }
+
 
         private List<GroupByObject> GroupByDay(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
             bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
@@ -855,6 +851,7 @@ namespace Infrastructure
 
             return result;
         }
+
 
         private List<GroupByObject> GroupByWeek(List<(Guid Id, DateTimeOffset Start, int? Amount, Guid? ClientId)> correctedData,
             bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
@@ -1058,11 +1055,38 @@ namespace Infrastructure
             Console.WriteLine(user.DefaultQuery);
         }
 
+        private bool DoesCorrectionExist(Guid registrationId)
+        {
+            LogpunchRegistration? correction = _dbContext.Registrations
+                .FirstOrDefault(r => r.CorrectionOfId == registrationId);
+
+            if (correction is null)
+            {
+                return false;
+            }
+            else if (correction is not null)
+            {
+                return true;
+            }
+            else
+            {
+                throw new InvalidOperationException("Correction is neither null nor not null");
+            }
+        }
+
         private async Task<LogpunchRegistration?> GetMostRecentCorrection(Guid registrationId)
         {
-            LogpunchRegistration? registration = await _dbContext.Registrations.Where(r => r.CorrectionOfId == registrationId).OrderByDescending(r => r.CreationTime).FirstOrDefaultAsync();
+            LogpunchRegistration? correction = await _dbContext.Registrations
+                .Where(r => r.CorrectionOfId == registrationId)
+                .OrderByDescending(r => r.CreationTime)
+                .FirstOrDefaultAsync();
 
-            return registration;
+            if (correction is null)
+            {
+                return null;
+            }
+
+            return correction;
         }
     }
 }

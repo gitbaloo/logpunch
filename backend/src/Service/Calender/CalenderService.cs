@@ -88,6 +88,24 @@ namespace Infrastructure
             return nationalHolidays;
         }
 
+        public static DateTimeOffset SetMaxTimeOnDate(DateTimeOffset date)
+        {
+            var latestTime = new TimeSpan(23, 59, 59, 999, 9999);
+            var maxDateTime = date.Date + latestTime;
+            var result = new DateTimeOffset(maxDateTime, date.Offset);
+
+            return result;
+        }
+
+        public static DateTimeOffset SetMinTimeOnDate(DateTimeOffset date)
+        {
+            var earliestTime = new TimeSpan(0, 0, 0);
+            var minDateTime = date.Date + earliestTime;
+            var result = new DateTimeOffset(minDateTime, date.Offset);
+
+            return result;
+        }
+
         private ICollection<DateTime> GetWeekends(DateTime startDate, DateTime endDate)
         {
             var weekendDates = new List<DateTime>();

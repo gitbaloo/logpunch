@@ -1,29 +1,30 @@
 using Domain;
-using Infrastructure.Client;
+using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Logpunch.Controllers;
-
-[Authorize]
-[ApiController]
-[Route("api/clients")]
-public class ClientController : ControllerBase
+namespace Logpunch.Controllers
 {
-    private readonly IClientService _clientService;
-
-    public ClientController(IClientService clientService)
+    [Authorize]
+    [ApiController]
+    [Route("api/clients")]
+    public class ClientController : ControllerBase
     {
-        _clientService = clientService;
-    }
+        private readonly IClientService _clientService;
 
-    [HttpGet("{employeeId}")]
-    public async Task<ActionResult<List<LogpunchClientDto>>> GetClients(Guid employeeId)
-    {
-        var clients = await _clientService.GetClients(employeeId);
-        return Ok(clients);
+        public ClientController(IClientService clientService)
+        {
+            _clientService = clientService;
+        }
+
+        [HttpGet("{employeeId}")]
+        public async Task<ActionResult<List<LogpunchClientDto>>> GetClients(Guid employeeId)
+        {
+            var clients = await _clientService.GetClients(employeeId);
+            return Ok(clients);
+        }
     }
 }

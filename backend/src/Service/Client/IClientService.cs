@@ -1,9 +1,10 @@
 using Domain;
 using Shared;
 
-namespace Infrastructure.Client;
-
-public interface IClientService
+namespace Infrastructure
 {
-    Task<List<LogpunchClientDto>> GetClients(Guid employeeId);
+    public interface IClientService
+    {
+        Task<List<LogpunchClientDto>> GetClients(Guid employeeId);
+    }
 }

@@ -1,8 +1,6 @@
 using System.Text;
 using Domain;
 using Infrastructure;
-using Infrastructure.Client;
-using Infrastructure.Overview;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +20,8 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IOverviewService, OverviewService>();
+builder.Services.AddScoped<ICalenderService, CalenderService>();
+builder.Services.AddHttpClient();
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     {

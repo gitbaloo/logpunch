@@ -19,6 +19,12 @@ change_directory() {
     fi
 }
 
+# Start the database
+echo "Starting database..."
+change_directory "$SCRIPT_DIR/database/data/"
+docker compose up -d &
+DATABASE_PID=$!
+
 # Start the backend
 echo "Starting backend..."
 change_directory "$SCRIPT_DIR/backend/src/Server/"
@@ -26,16 +32,10 @@ docker compose up -d &
 BACKEND_PID=$!
 
 # Start the frontend
-echo "Starting frontend..."
-change_directory "$SCRIPT_DIR/frontend/"
-docker compose up -d &
-FRONTEND_PID=$!
-
-# Start the database
-echo "Starting database..."
-change_directory "$SCRIPT_DIR/database/data/"
-docker compose up -d &
-DATABASE_PID=$!
+# echo "Starting frontend..."
+# change_directory "$SCRIPT_DIR/frontend/"
+# docker compose up -d &
+# FRONTEND_PID=$!
 
 # Wait for a few seconds to ensure services start properly
 sleep 10
@@ -50,9 +50,9 @@ xdg-open "http://localhost:8081/browser/"
 xdg-open "http://localhost:7206/swagger/index.html"
 
 # frontend
-xdg-open "http://localhost:5173/"
+# xdg-open "http://localhost:5173/"
 
 # Wait for all processes to finish
-wait $BACKEND_PID
-wait $FRONTEND_PID
 wait $DATABASE_PID
+wait $BACKEND_PID
+# wait $FRONTEND_PID

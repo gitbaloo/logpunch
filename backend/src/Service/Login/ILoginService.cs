@@ -1,10 +1,11 @@
 using Domain;
 using Shared;
 
-namespace Service.Login;
-
-public interface ILoginService
+namespace Service.Login
 {
-    Task<string> AuthorizeLogin(string email, string password);
-    public Task<LogpunchUserDto> ValidateToken(string token);
+    public interface ILoginService
+    {
+        Task<string> AuthorizeLogin(string email, string password);
+        public Task<LogpunchUserDto> ValidateToken(string token);
+    }
 }

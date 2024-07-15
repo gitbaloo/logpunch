@@ -1,13 +1,14 @@
-﻿namespace Shared;
-
-public class LogpunchClientDto
+﻿namespace Shared
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-
-    public LogpunchClientDto()
+    public class LogpunchClientDto
     {
-        Name = "";
-    }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
 
+        public LogpunchClientDto()
+        {
+            Name = "";
+        }
+
+    }
 }

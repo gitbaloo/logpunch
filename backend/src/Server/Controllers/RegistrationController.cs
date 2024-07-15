@@ -4,240 +4,258 @@ using Microsoft.AspNetCore.Mvc;
 using Service.Login;
 using System.Security.Claims;
 using Shared;
+using System.ComponentModel;
 
-namespace Logpunch.Controllers;
-
-[Authorize]
-[ApiController]
-[Route("api/registration")]
-public class RegistrationController : ControllerBase
+namespace Logpunch.Controllers
 {
-    private readonly IRegistrationService _registrationService;
-    private readonly ILoginService _loginService;
-
-    public RegistrationController(IRegistrationService registrationService, ILoginService loginService)
+    [Authorize]
+    [ApiController]
+    [Route("api/registration")]
+    public class RegistrationController : ControllerBase
     {
-        _registrationService = registrationService;
-        _loginService = loginService;
-    }
+        private readonly IRegistrationService _registrationService;
+        private readonly ILoginService _loginService;
 
-    // User APIs
-
-    [HttpPost("work/create")]
-    public async Task<IActionResult> CreateWorkRegistration([FromBody] CreateRegistrationRequest request)
-    {
-        try
+        public RegistrationController(IRegistrationService registrationService, ILoginService loginService)
         {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var registration = await _registrationService.CreateWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
-            return Ok(registration);
+            _registrationService = registrationService;
+            _loginService = loginService;
         }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
 
-    [HttpPost("work/start")]
-    public async Task<IActionResult> StartShiftRegistration([FromBody] StartRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
+        // User APIs
 
-            var startShiftRegistration = await _registrationService.StartWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
-            return Ok(startShiftRegistration);
-        }
-        catch (HttpRequestException ex)
+        [HttpPost("work/create")]
+        public async Task<IActionResult> CreateWorkRegistration([FromBody] CreateWorkRegistrationRequest request)
         {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpPatch("work/end")]
-    public async Task<IActionResult> EndShiftRegistration([FromBody] EndRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var endShiftRegistration = await _registrationService.EndWorkRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
-            if (endShiftRegistration is null)
+            try
             {
-                return NotFound();
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var registration = await _registrationService.CreateWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+                return Ok(registration);
             }
-            return Ok(endShiftRegistration);
-        }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpPost("transportation/create")]
-    public async Task<IActionResult> CreateTransportationRegistration([FromBody] CreateRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var registration = await _registrationService.CreateTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
-            return Ok(registration);
-        }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpPost("transportation/start")]
-    public async Task<IActionResult> StartTransportationRegistration([FromBody] StartRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var startShiftRegistration = await _registrationService.StartTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
-            return Ok(startShiftRegistration);
-        }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpPatch("transportation/end")]
-    public async Task<IActionResult> EndTransportationRegistration([FromBody] EndRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var endShiftRegistration = await _registrationService.EndTransportationRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
-            if (endShiftRegistration is null)
+            catch (HttpRequestException ex)
             {
-                return NotFound();
+                return StatusCode(500, ex.Message);
             }
-            return Ok(endShiftRegistration);
         }
-        catch (HttpRequestException ex)
+
+        [HttpPost("work/start")]
+        public async Task<IActionResult> StartWorkRegistration([FromBody] StartRegistrationRequest request)
         {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-
-    [HttpPatch("confirmation")]
-    public async Task<IActionResult> EmployeeConfirmationRegistration([FromBody] EmployeeConfirmationRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var confirmedRegistration = await _registrationService.EmployeeConfirmationRegistration(user.Id, request.RegistrationId);
-            if (confirmedRegistration is null)
+            try
             {
-                return NotFound();
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var startShiftRegistration = await _registrationService.StartWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
+                return Ok(startShiftRegistration);
             }
-            return Ok(confirmedRegistration);
-        }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpPost("correction")]
-    public async Task<IActionResult> EmployeeCorrectionRegistration([FromBody] EmployeeCorrectionRegistrationRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(user.Id, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
-            if (correctionRegistration is null)
+            catch (HttpRequestException ex)
             {
-                return NotFound();
+                return StatusCode(500, ex.Message);
             }
-            return Ok(correctionRegistration);
         }
-        catch (HttpRequestException ex)
+
+        [HttpPatch("work/end")]
+        public async Task<IActionResult> EndWorkRegistration([FromBody] EndRegistrationRequest request)
         {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-
-    // Admin APIs
-
-    [HttpPatch("admin/statusupdate")]
-    public async Task<IActionResult> UpdateRegistrationStatus([FromBody] UpdateStatusRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Status);
-            if (registration is null)
+            try
             {
-                return NotFound();
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var endShiftRegistration = await _registrationService.EndWorkRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
+                if (endShiftRegistration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(endShiftRegistration);
             }
-            return Ok(registration);
-        }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    [HttpPatch("admin/typechange")]
-    public async Task<IActionResult> ChangeRegistrationType([FromBody] ChangeTypeRequest request)
-    {
-        try
-        {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-
-            var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Type);
-            if (registration is null)
+            catch (HttpRequestException ex)
             {
-                return NotFound();
+                return StatusCode(500, ex.Message);
             }
-            return Ok(registration);
         }
-        catch (HttpRequestException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-    }
 
-    [HttpPost("admin/correction")]
-    public async Task<IActionResult> AdminCorrectionRegistration([FromBody] AdminCorrectionRegistrationRequest request)
-    {
-        try
+        [HttpPost("transportation/create")]
+        public async Task<IActionResult> CreateTransportationRegistration([FromBody] CreateWorkRegistrationRequest request)
         {
-            var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-            var user = await _loginService.ValidateToken(token);
-            var correctionRegistration = await _registrationService.AdminCorrectionRegistration(user.Id, request.EmployeeId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
-            if (correctionRegistration is null)
+            try
             {
-                return NotFound();
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var registration = await _registrationService.CreateTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+                return Ok(registration);
             }
-            return Ok(correctionRegistration);
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
-        catch (HttpRequestException ex)
+
+        [HttpPost("transportation/start")]
+        public async Task<IActionResult> StartTransportationRegistration([FromBody] StartRegistrationRequest request)
         {
-            return StatusCode(500, ex.Message);
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var startShiftRegistration = await _registrationService.StartTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
+                return Ok(startShiftRegistration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPatch("transportation/end")]
+        public async Task<IActionResult> EndTransportationRegistration([FromBody] EndRegistrationRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var endShiftRegistration = await _registrationService.EndTransportationRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
+                if (endShiftRegistration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(endShiftRegistration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+        [HttpPatch("confirmation")]
+        public async Task<IActionResult> EmployeeConfirmationRegistration([FromBody] EmployeeConfirmationRegistrationRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var confirmedRegistration = await _registrationService.EmployeeConfirmationRegistration(user.Id, request.RegistrationId);
+                if (confirmedRegistration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(confirmedRegistration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("correction")]
+        public async Task<IActionResult> EmployeeCorrectionRegistration([FromBody] EmployeeCorrectionRegistrationRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(user.Id, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+                if (correctionRegistration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(correctionRegistration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        // Admin APIs
+
+        [HttpPost("admin/create/absence")]
+        public async Task<IActionResult> CreateAbsenceRegistration([FromBody] CreateAbsenceRegistrationRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+                var registration = await _registrationService.CreateAbsenceRegistration(user.Id, request.EmployeeId, request.Start, request.End, request.Type, request.FirstComment, request.SecondComment);
+                return Ok(registration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPatch("admin/update")]
+        public async Task<IActionResult> UpdateRegistrationStatus([FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Status);
+                if (registration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(registration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPatch("admin/change")]
+        public async Task<IActionResult> ChangeRegistrationType([FromBody] ChangeTypeRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+
+                var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Type);
+                if (registration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(registration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+        [HttpPost("admin/correction")]
+        public async Task<IActionResult> AdminCorrectionRegistration([FromBody] AdminCorrectionRegistrationRequest request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+                var correctionRegistration = await _registrationService.AdminCorrectionRegistration(user.Id, request.EmployeeId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+                if (correctionRegistration is null)
+                {
+                    return NotFound();
+                }
+                return Ok(correctionRegistration);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

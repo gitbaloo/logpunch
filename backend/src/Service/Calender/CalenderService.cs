@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using System.Globalization;
+
 
 namespace Infrastructure
 {
@@ -88,6 +90,8 @@ namespace Infrastructure
             return nationalHolidays;
         }
 
+        // Static Date and Time methods
+
         public static DateTimeOffset SetMaxTimeOnDate(DateTimeOffset date)
         {
             var latestTime = new TimeSpan(23, 59, 59, 999, 9999);
@@ -106,7 +110,180 @@ namespace Infrastructure
             return result;
         }
 
-        private ICollection<DateTime> GetWeekends(DateTime startDate, DateTime endDate)
+        public static DateTimeOffset FindStartDateOfTimePeriod(DateTimeOffset startDate, string timePeriod, string timeMode)
+        {
+            if (timePeriod == "day")
+            {
+                switch (timeMode)
+                {
+                    case "last":
+                        return startDate.AddDays(-1);
+
+                    case "current":
+                        return startDate;
+
+                    case "rolling":
+                        return startDate;
+
+                    default: throw new ArgumentException("Invalid timemode: " + timeMode);
+                }
+            }
+
+            if (timePeriod == "week")
+            {
+                switch (timeMode)
+                {
+                    case "last":
+                        return FindStartDateOfWeek(startDate).AddDays(-7);
+
+                    case "current":
+                        return FindStartDateOfWeek(startDate);
+
+                    case "rolling":
+                        startDate = startDate.AddDays(-7);
+                        return startDate;
+                    default: throw new ArgumentException("Invalid timemode: " + timeMode);
+                }
+            }
+
+            if (timePeriod == "month")
+            {
+                switch (timeMode)
+                {
+                    case "last":
+                        startDate = FindStartDateOfMonth(startDate).AddMonths(-1);
+                        return startDate;
+                    case "current":
+                        startDate = FindStartDateOfMonth(startDate);
+                        return startDate;
+
+                    case "rolling":
+                        return startDate.AddMonths(-1);
+                    default: throw new ArgumentException("Invalid timemode: " + timeMode);
+                }
+            }
+
+            if (timePeriod == "year")
+            {
+                switch (timeMode)
+                {
+                    case "last":
+                        return startDate.AddDays(-(startDate.DayOfYear - 1)).AddYears(-1);
+                    case "current":
+                        return startDate.AddDays(-(startDate.DayOfYear - 1));
+                    case "rolling":
+                        return startDate.AddYears(-1);
+                    default: throw new ArgumentException("Invalid timemode: " + timeMode);
+                }
+            }
+
+            if (timePeriod == "custom")
+            {
+                return startDate;
+            }
+
+            throw new ArgumentException("Invalid timeperiod: " + timePeriod);
+        }
+
+        public static DateTimeOffset FindStartDateOfWeek(DateTimeOffset startDate)
+        {
+            switch (startDate.DayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    return startDate;
+
+                case DayOfWeek.Tuesday:
+                    return startDate.AddDays(-1);
+
+                case DayOfWeek.Wednesday:
+                    return startDate.AddDays(-2);
+
+                case DayOfWeek.Thursday:
+                    return startDate.AddDays(-3);
+
+                case DayOfWeek.Friday:
+                    return startDate.AddDays(-4);
+
+                case DayOfWeek.Saturday:
+                    return startDate.AddDays(-5);
+
+                case DayOfWeek.Sunday:
+                    return startDate.AddDays(-6);
+
+                default:
+                    throw new Exception("Error in day of week");
+            }
+        }
+
+        public static DateTimeOffset FindStartDateOfMonth(DateTimeOffset startDate)
+        {
+            return new DateTimeOffset(startDate.Year, startDate.Month, 1, 0, 0, 0, startDate.Offset);
+        }
+
+        public static DateTimeOffset FindEndDate(DateTimeOffset originalStartDate, DateTimeOffset startDate, string timePeriod, string timeMode)
+        {
+            switch (timePeriod)
+            {
+                case "day":
+                    if (timeMode == "last" || timeMode == "current" || timeMode == "rolling")
+                    {
+                        return startDate;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid timeMode: {timeMode}");
+                    }
+                case "week":
+                    if (timeMode == "last" || timeMode == "current")
+                    {
+                        return startDate.AddDays(6);
+                    }
+                    else if (timeMode == "rolling")
+                    {
+                        return originalStartDate;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid timeMode: {timeMode}");
+                    }
+                case "month":
+                    if (timeMode == "last")
+                    {
+                        return startDate.AddDays(DateTime.DaysInMonth(startDate.Year, startDate.Month) - 1);
+                    }
+                    else if (timeMode == "current")
+                    {
+                        int endOfMonth = DateTime.DaysInMonth(startDate.Year, startDate.Month);
+                        int diff = endOfMonth - startDate.Day;
+                        return startDate.AddDays(diff);
+                    }
+                    else if (timeMode == "rolling")
+                    {
+                        return originalStartDate;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid timeMode: {timeMode}");
+                    }
+                case "year":
+                    if (timeMode == "last" || timeMode == "current")
+                    {
+                        return startDate.AddYears(1).AddDays(-1);
+                    }
+                    else if (timeMode == "rolling")
+                    {
+                        return originalStartDate;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid timeMode: {timeMode}");
+                    }
+                default:
+                    throw new ArgumentException($"Incorrect timeperiod input: {timePeriod}");
+            }
+        }
+
+        public static List<DateTime> GetWeekends(DateTime startDate, DateTime endDate)
         {
             var weekendDates = new List<DateTime>();
             TimeSpan timeSpan = endDate - startDate;
@@ -122,6 +299,15 @@ namespace Infrastructure
             }
 
             return weekendDates;
+        }
+
+        public static int GetDanishWeekNumber(DateTimeOffset dateTimeOffset)
+        {
+            CultureInfo danishCulture = new("da-DK");
+            Calendar calendar = danishCulture.Calendar;
+
+            int weekNumber = calendar.GetWeekOfYear(dateTimeOffset.DateTime, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            return weekNumber;
         }
 
         // Legacy methods

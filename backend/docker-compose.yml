@@ -1,7 +1,7 @@
 services:
   server:
     image: logpunch-backend
-    container_name: backend
+    container_name: logpunch_backend
     build:
       context: .
       dockerfile: Dockerfile

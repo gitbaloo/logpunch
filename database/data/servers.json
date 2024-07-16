@@ -1,7 +1,7 @@
 {
     "Servers": {
         "1": {
-            "Name": "postgres_logpunch",
+            "Name": "logpunch_database",
             "Group": "Servers",
             "Host": "database",
             "Port": 5432,

@@ -2,26 +2,60 @@
 
 ## Linux / WSL
 
-Simply run the script called 'launch.sh' in the root folder.
+Make sure you have Docker installed on your machine.
+There are 5 custom bash scripts each doing the following:
 
-Open a terminal, change the directory to where 'logpunch' is on your machine and use this command:
+### setup.sh
+
+Make the file executable:
+
+```
+chmod +x setup.sh
+```
+
+Run it with this command:
+
+```
+./setup.sh
+```
+
+This will create 'logpunch_network', create folders needed for local data, and pull and build all Docker images needed.
+After this, it will make the other scripts executable.
+
+### launch.sh
+
+This will launch all containers - pgadmin, logpunch_database, logpunch_backend and logpunch_frontend.
+Run it with this command:
 
 ```
 ./launch.sh
 ```
 
-## Windows
+### kill.sh
 
-Make sure you can execute PowerShell scripts.
-
-```
-Set-ExecutionPolicy RemoteSigned
-```
-
-Open your terminal, change the directory to where 'logpunch' is on your machine and use this command:
+This will kill the containers but the volumes will remain. Use this if you want data inserted into the database to remain.
+Run it with this command:
 
 ```
-.\launch.ps1
+./kill.sh
+```
+
+### wipe.sh
+
+This will both kill the containers and remove the volumes. Use this if you want to return the database to its original state.
+Run it with this command:
+
+```
+./wipe.sh
+```
+
+### reset.sh
+
+This is used to reset the login for pgAdmin. It will also run wipe.sh:
+Run it with this command:
+
+```
+./reset.sh
 ```
 
 # Accessing the solution
@@ -36,10 +70,9 @@ The frontend will start on http://localhost:5173 - connect to this address throu
 
 ## Database
 
-Make sure you have docker installed on your machine for this to work.
 The docker-compose file sets up the server with the database in a container (postgres_logpunch) and pgAdmin 4 in another container (pgadmin).
 
-pgAdmin will be accessible on http://localhost:8081/browser/ and when you connect here for the first time you'll need to add the server/database with these details below.
+pgAdmin will be accessible on http://localhost:8081/browser/ and when you connect here for the first time you'll need to set a master password and use it every time you launch the container. You will also be prompted for a password for the database which you can see below under 'Connection'.
 
 ### General
 
@@ -48,7 +81,7 @@ Server Group: Servers
 
 ### Connection
 
-Host name/address: postgres_logpunch
+Host name/address: logpunch_database
 Port: 5432
 Maintenance database: logpunchdb
 Username: logpunchuser

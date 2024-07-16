@@ -1,6 +1,6 @@
 services:
   frontend:
-    container_name: frontend
+    container_name: logpunch_frontend
     build:
       context: .
       dockerfile: Dockerfile

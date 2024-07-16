@@ -43,6 +43,11 @@ sleep 10
 echo "Solution launched!"
 echo "Launching browser tabs..."
 
+# Wait for all processes to finish
+wait $DATABASE_PID
+wait $BACKEND_PID
+# wait $FRONTEND_PID
+
 # database (pgAdmin 4)
 xdg-open "http://localhost:8081/browser/"
 
@@ -51,8 +56,3 @@ xdg-open "http://localhost:7206/swagger/index.html"
 
 # frontend
 # xdg-open "http://localhost:5173/"
-
-# Wait for all processes to finish
-wait $DATABASE_PID
-wait $BACKEND_PID
-# wait $FRONTEND_PID

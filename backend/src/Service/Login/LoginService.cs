@@ -26,15 +26,18 @@ namespace Service.Login
         public async Task<string> AuthorizeLogin(string email, string password)
         {
             var user = await _dbContext.Users
-                .Where(c => c.Email == email && c.Password == password)
-                .Select(c => new LogpunchUserDto
+                .Where(u => u.Email == email && u.Password == password)
+                .Select(u => new LogpunchUserDto
                 {
-                    Id = c.Id,
-                    Email = c.Email
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    Role = u.Role.ToString()
                 })
                 .FirstOrDefaultAsync();
 
-            if (user != null)
+            if (user is not null)
             {
                 var token = GenerateJwtToken(user);
                 return token;
@@ -72,7 +75,6 @@ namespace Service.Login
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     Email = u.Email,
-                    DefaultQuery = u.DefaultQuery,
                     Role = u.Role.ToString()
                 }).FirstOrDefaultAsync();
                 return user ?? throw new AuthenticationException("Error validating user");

@@ -90,6 +90,23 @@ namespace Infrastructure
             return nationalHolidays;
         }
 
+        public async Task<bool> IsDateValid(DateTimeOffset date)
+        {
+            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                return false;
+            }
+
+            var nationalHolidays = await GetOnlyNationalHolidays(date.Date, date.Date);
+
+            if (nationalHolidays is null || nationalHolidays.Count == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         // Static Date and Time methods
 
         public static DateTimeOffset SetMaxTimeOnDate(DateTimeOffset date)
@@ -309,6 +326,8 @@ namespace Infrastructure
             int weekNumber = calendar.GetWeekOfYear(dateTimeOffset.DateTime, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
             return weekNumber;
         }
+
+        public static readonly List<string> TimeUnitOrder = ["day", "week", "month", "year"];
 
         // Legacy methods
 

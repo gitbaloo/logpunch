@@ -28,8 +28,23 @@ public class OverviewController : ControllerBase
         {
             var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
             var user = await _loginService.ValidateToken(token);
+            Guid nonNullableEmployeeId;
 
-            var response = await _overviewService.GetOngoingRegistration(user.Id, employeeId);
+            if (!employeeId.HasValue)
+            {
+                nonNullableEmployeeId = user.Id;
+            }
+            else
+            {
+                nonNullableEmployeeId = employeeId.Value;
+            }
+
+            var response = await _overviewService.GetOngoingRegistration(user.Id, nonNullableEmployeeId);
+
+            if (response is null)
+            {
+                return NotFound("No ongoing registration could be found");
+            }
 
             return Ok(response);
         }
@@ -40,7 +55,7 @@ public class OverviewController : ControllerBase
     }
 
     [HttpGet("work/get-unsettled")]
-    public async Task<IActionResult> GetUnsettledWorkRegistrations(Guid? employeeId)
+    public async Task<IActionResult> GetUnsettledWorkRegistrations(Guid? employeeId) // employeeId will be null unless an admin using function to check an employees registrations
     {
         try
         {
@@ -73,16 +88,33 @@ public class OverviewController : ControllerBase
     }
 
     [HttpGet("work/get-overview")]
-    public async Task<IActionResult> GetWorkOverview(Guid? employeeId, bool sortAsc, bool showDaysWithNoRecords,
+    public async Task<IActionResult> GetWorkOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords,
         bool setDefault, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,
-        string thenBy)
+        string thenBy) // employeeId will be null unless an admin using function to check an employees registrations
     {
         try
         {
             var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
             var user = await _loginService.ValidateToken(token);
-            var response = await _overviewService.WorkOverviewQuery(user.Id, employeeId, sortAsc, showDaysWithNoRecords, setDefault,
+            Guid nonNullableEmployeeId;
+
+            if (!employeeId.HasValue)
+            {
+                nonNullableEmployeeId = user.Id;
+            }
+            else
+            {
+                nonNullableEmployeeId = employeeId.Value;
+            }
+
+            var response = await _overviewService.WorkOverviewQuery(user.Id, nonNullableEmployeeId, sortAsc, showUnitsWithNoRecords, setDefault,
                 startDate, endDate, timePeriod, timeMode, groupBy, thenBy);
+
+            if (response.TimePeriodObject.GroupByObjects.Count == 0)
+            {
+                return NotFound("No registrations in given timeframe was found");
+            }
+
             return Ok(response);
         }
         catch (ArgumentException e)
@@ -99,6 +131,12 @@ public class OverviewController : ControllerBase
             var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
             var user = await _loginService.ValidateToken(token);
             var response = await _overviewService.GetDefaultWorkQuery(user.Id);
+
+            if (response is null)
+            {
+                return NotFound("No default work overview found");
+            }
+
             return Ok(response);
         }
         catch (ArgumentException e)
@@ -110,7 +148,7 @@ public class OverviewController : ControllerBase
     // Transportation registrations
 
     [HttpGet("transportation/get-unsettled")]
-    public async Task<IActionResult> GetUnsettledTransportationRegistrations(Guid? employeeId)
+    public async Task<IActionResult> GetUnsettledTransportationRegistrations(Guid? employeeId) // employeeId will be null unless an admin using function to check an employees registrations
     {
         try
         {
@@ -143,15 +181,32 @@ public class OverviewController : ControllerBase
     }
 
     [HttpGet("transportation/get-overview")]
-    public async Task<IActionResult> GetTransportationOverview(Guid? employeeId, bool sortAsc, bool showDaysWithNoRecords, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,
-        string thenBy)
+    public async Task<IActionResult> GetTransportationOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,
+        string thenBy) // employeeId will be null unless an admin using function to check an employees registrations
     {
         try
         {
             var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
             var user = await _loginService.ValidateToken(token);
-            var response = await _overviewService.TransportationOverviewQuery(user.Id, employeeId, sortAsc, showDaysWithNoRecords,
+            Guid nonNullableEmployeeId;
+
+            if (!employeeId.HasValue)
+            {
+                nonNullableEmployeeId = user.Id;
+            }
+            else
+            {
+                nonNullableEmployeeId = employeeId.Value;
+            }
+
+            var response = await _overviewService.TransportationOverviewQuery(user.Id, nonNullableEmployeeId, sortAsc, showUnitsWithNoRecords,
                 startDate, endDate, timePeriod, timeMode, groupBy, thenBy);
+
+            if (response.TimePeriodObject.GroupByObjects.Count == 0)
+            {
+                return NotFound("No registrations in given timeframe was found");
+            }
+
             return Ok(response);
         }
         catch (ArgumentException e)
@@ -196,15 +251,32 @@ public class OverviewController : ControllerBase
     }
 
     [HttpGet("absence/get-overview")]
-    public async Task<IActionResult> GetAbsenceOverview(Guid? employeeId, bool sortAsc, bool showDaysWithNoRecords,
+    public async Task<IActionResult> GetAbsenceOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords,
         DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy, string thenBy, string absenceType)
     {
         try
         {
             var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
             var user = await _loginService.ValidateToken(token);
-            var response = await _overviewService.AbsenceOverviewQuery(user.Id, employeeId, sortAsc, showDaysWithNoRecords,
+            Guid nonNullableEmployeeId;
+
+            if (!employeeId.HasValue)
+            {
+                nonNullableEmployeeId = user.Id;
+            }
+            else
+            {
+                nonNullableEmployeeId = employeeId.Value;
+            }
+
+            var response = await _overviewService.AbsenceOverviewQuery(user.Id, nonNullableEmployeeId, sortAsc, showUnitsWithNoRecords,
                 startDate, endDate, timePeriod, timeMode, groupBy, thenBy, absenceType);
+
+            if (response.TimePeriodObject.GroupByObjects.Count == 0)
+            {
+                return NotFound("No registrations in given timeframe was found");
+            }
+
             return Ok(response);
         }
         catch (ArgumentException e)

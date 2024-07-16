@@ -20,31 +20,34 @@ namespace Infrastructure
 
         // Work
 
-        public async Task<LogpunchRegistrationDto> CreateWorkRegistration(Guid userId, Guid? employeeId, Guid? clientId, DateTimeOffset start, DateTimeOffset end, string? firstComment, string? secondComment)
+        public async Task<LogpunchRegistrationDto> CreateWorkRegistration(Guid userId, Guid employeeId, Guid? clientId, DateTimeOffset start, DateTimeOffset end, string? firstComment, string? secondComment)
         {
-            if (start > end)
-            {
-                throw new InvalidOperationException("Start cannot be later than end");
-            }
 
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only register for yourself");
+                employee = user;
+            }
+
+            if (start > end)
+            {
+                throw new InvalidOperationException("Start cannot be later than end");
+            }
+
+            if (await IsRegistrationOverlapping(start, end, employee))
+            {
+                throw new InvalidOperationException("A registration between the start and end already exist");
             }
 
             LogpunchClient? client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId)
                 ?? null;
+
 
             EmployeeClientRelation employeeClientRelation;
 
@@ -55,6 +58,7 @@ namespace Infrastructure
                     && c.ClientId == clientId)
                     ?? throw new InvalidOperationException("No relation exists between employee and client");
             }
+
             TimeSpan timeSpan = end - start;
             int totalMinutes = (int)timeSpan.TotalMinutes;
 
@@ -71,27 +75,32 @@ namespace Infrastructure
             return registrationDto;
         }
 
-        public async Task<LogpunchRegistrationDto> StartWorkRegistration(Guid userId, Guid? employeeId, Guid? clientId, string? firstComment)
+        public async Task<LogpunchRegistrationDto> StartWorkRegistration(Guid userId, Guid employeeId, Guid? clientId, string? firstComment)
         {
+            RegistrationType registrationType = RegistrationType.Work;
+            RegistrationStatus registrationStatus = RegistrationStatus.Ongoing;
+            var creationTime = DateTimeOffset.UtcNow;
+            var start = creationTime;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only register for yourself");
+                employee = user;
             }
 
             if (OngoingRegistrationExists(employee.Id))
             {
                 throw new InvalidOperationException("You cannot start a new registration if an ongoing registration already exists");
+            }
+
+            if (await IsRegistrationOverlapping(start, null, employee))
+            {
+                throw new InvalidOperationException("A registration between the start and end already exist");
             }
 
             LogpunchClient? client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId);
@@ -103,12 +112,7 @@ namespace Infrastructure
                     && c.ClientId == clientId) ?? throw new InvalidOperationException("No relation exists between employee and client");
             }
 
-            RegistrationType registrationType = RegistrationType.Work;
-            RegistrationStatus registrationStatus = RegistrationStatus.Ongoing;
-            var creationTime = DateTimeOffset.UtcNow;
-            var startTime = creationTime;
-
-            var registration = new LogpunchRegistration(employee.Id, registrationType, null, startTime, null, user.Id, client?.Id, creationTime, registrationStatus, firstComment, null, null);
+            var registration = new LogpunchRegistration(employee.Id, registrationType, null, start, null, user.Id, client?.Id, creationTime, registrationStatus, firstComment, null, null);
             await _dbContext.Registrations.AddAsync(registration);
             await _dbContext.SaveChangesAsync();
 
@@ -117,26 +121,23 @@ namespace Infrastructure
             return registrationDto;
         }
 
-        public async Task<LogpunchRegistrationDto> EndWorkRegistration(Guid userId, Guid? employeeId, Guid registrationId, string? secondComment)
+        public async Task<LogpunchRegistrationDto> EndWorkRegistration(Guid userId, Guid employeeId, Guid registrationId, string? secondComment)
         {
-            LogpunchRegistration registration = _dbContext.Registrations.FirstOrDefault(r => r.Id == registrationId)
-                ?? throw new InvalidOperationException("Registration not found");
-
+            var end = DateTimeOffset.UtcNow;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only end your own registrations");
+                employee = user;
             }
+
+            LogpunchRegistration registration = _dbContext.Registrations.FirstOrDefault(r => r.Id == registrationId)
+                ?? throw new InvalidOperationException("Registration not found");
 
             if (user.Role != UserRole.Admin && user.Id != registration.EmployeeId)
             {
@@ -148,13 +149,11 @@ namespace Infrastructure
                 throw new InvalidOperationException("Registration status is not 'Ongoing'");
             }
 
-            var endTime = DateTimeOffset.UtcNow;
-
-            TimeSpan timeSpan = endTime - registration.Start;
+            TimeSpan timeSpan = end - registration.Start;
             int totalMinutes = (int)timeSpan.TotalMinutes;
 
             registration.Amount = totalMinutes;
-            registration.End = endTime;
+            registration.End = end;
             registration.Status = RegistrationStatus.Open;
             registration.SecondComment = secondComment;
 
@@ -167,27 +166,31 @@ namespace Infrastructure
 
         // Transport
 
-        public async Task<LogpunchRegistrationDto> CreateTransportationRegistration(Guid userId, Guid? employeeId, Guid? clientId, DateTimeOffset start, DateTimeOffset end, string? firstComment, string? secondComment)
+        public async Task<LogpunchRegistrationDto> CreateTransportationRegistration(Guid userId, Guid employeeId, Guid? clientId, DateTimeOffset start, DateTimeOffset end, string? firstComment, string? secondComment)
         {
-            if (start > end)
-            {
-                throw new InvalidOperationException("Start cannot be later than end");
-            }
-
+            RegistrationType registrationType = RegistrationType.Transportation;
+            RegistrationStatus registrationStatus = RegistrationStatus.Open;
+            var creationTime = DateTimeOffset.UtcNow;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only create registrations for yourself");
+                employee = user;
+            }
+
+            if (start > end)
+            {
+                throw new InvalidOperationException("Start cannot be later than end");
+            }
+
+            if (await IsRegistrationOverlapping(start, end, employee))
+            {
+                throw new InvalidOperationException("A registration between the start and end already exist");
             }
 
             LogpunchClient client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId)
@@ -200,10 +203,6 @@ namespace Infrastructure
             TimeSpan timeSpan = end - start;
             int totalMinutes = (int)timeSpan.TotalMinutes;
 
-            RegistrationType registrationType = RegistrationType.Transportation;
-            RegistrationStatus registrationStatus = RegistrationStatus.Open;
-
-            var creationTime = DateTimeOffset.UtcNow;
             var registration = new LogpunchRegistration(employee.Id, registrationType, totalMinutes, start, end, user.Id, client.Id, creationTime, registrationStatus, firstComment, secondComment, null);
             await _dbContext.Registrations.AddAsync(registration);
             await _dbContext.SaveChangesAsync();
@@ -213,22 +212,32 @@ namespace Infrastructure
             return registrationDto;
         }
 
-        public async Task<LogpunchRegistrationDto> StartTransportationRegistration(Guid userId, Guid? employeeId, Guid? clientId, string? firstComment)
+        public async Task<LogpunchRegistrationDto> StartTransportationRegistration(Guid userId, Guid employeeId, Guid? clientId, string? firstComment)
         {
+            RegistrationType registrationType = RegistrationType.Transportation;
+            RegistrationStatus registrationStatus = RegistrationStatus.Ongoing;
+            var creationTime = DateTimeOffset.UtcNow;
+            var start = creationTime;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only start your own registrations");
+                employee = user;
+            }
+
+            if (OngoingRegistrationExists(employee.Id))
+            {
+                throw new InvalidOperationException("You cannot start a new registration if an ongoing registration already exists");
+            }
+
+            if (await IsRegistrationOverlapping(start, null, employee))
+            {
+                throw new InvalidOperationException("A registration between the start and end already exist");
             }
 
             LogpunchClient? client = _dbContext.Clients.FirstOrDefault(c => c.Id == clientId);
@@ -240,12 +249,7 @@ namespace Infrastructure
                     && c.ClientId == clientId) ?? throw new InvalidOperationException("No relation exists between employee and client");
             }
 
-            RegistrationType registrationType = RegistrationType.Transportation;
-            RegistrationStatus registrationStatus = RegistrationStatus.Ongoing;
-            var creationTime = DateTimeOffset.UtcNow;
-            var startTime = creationTime;
-
-            var registration = new LogpunchRegistration(employee.Id, registrationType, null, startTime, null, user.Id, client?.Id, creationTime, registrationStatus, firstComment, null, null);
+            var registration = new LogpunchRegistration(employee.Id, registrationType, null, start, null, user.Id, client?.Id, creationTime, registrationStatus, firstComment, null, null);
             await _dbContext.Registrations.AddAsync(registration);
             await _dbContext.SaveChangesAsync();
 
@@ -254,27 +258,19 @@ namespace Infrastructure
             return registrationDto;
         }
 
-        public async Task<LogpunchRegistrationDto> EndTransportationRegistration(Guid userId, Guid? employeeId, Guid registrationId, string? secondComment)
+        public async Task<LogpunchRegistrationDto> EndTransportationRegistration(Guid userId, Guid employeeId, Guid registrationId, string? secondComment)
         {
+            var end = DateTimeOffset.UtcNow;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only end your own registrations");
-            }
-
-            if (OngoingRegistrationExists(employee.Id))
-            {
-                throw new InvalidOperationException("You cannot start a new registration if an ongoing registration already exists");
+                employee = user;
             }
 
             LogpunchRegistration registration = _dbContext.Registrations.FirstOrDefault(r => r.Id == registrationId)
@@ -290,13 +286,12 @@ namespace Infrastructure
                 throw new InvalidOperationException("Registration status is not 'Ongoing'");
             }
 
-            var endTime = DateTimeOffset.UtcNow;
 
-            TimeSpan timeSpan = endTime - registration.Start;
+            TimeSpan timeSpan = end - registration.Start;
             int totalMinutes = (int)timeSpan.TotalMinutes;
 
             registration.Amount = totalMinutes;
-            registration.End = endTime;
+            registration.End = end;
             registration.Status = RegistrationStatus.Open;
             registration.SecondComment = secondComment;
 
@@ -338,6 +333,10 @@ namespace Infrastructure
 
         public async Task<LogpunchRegistrationDto> EmployeeCorrectionRegistration(Guid userId, DateTimeOffset start, DateTimeOffset end, Guid? clientId, string? firstComment, string? secondComment, Guid correctionOfId)
         {
+            RegistrationType registrationType = RegistrationType.Work;
+            RegistrationStatus registrationStatus = RegistrationStatus.Open;
+            var creationTime = DateTimeOffset.UtcNow;
+
             LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
                 ?? throw new InvalidOperationException("User not found");
 
@@ -379,11 +378,6 @@ namespace Infrastructure
             TimeSpan timeSpan = end - start;
             int totalMinutes = (int)timeSpan.TotalMinutes;
 
-            RegistrationType registrationType = RegistrationType.Work;
-            RegistrationStatus registrationStatus = RegistrationStatus.Open;
-
-            var creationTime = DateTimeOffset.UtcNow;
-
             var correctionRegistration = new LogpunchRegistration(user.Id, registrationType, totalMinutes, start, end, user.Id, client?.Id, creationTime, registrationStatus, firstComment, secondComment, existingRegistration.Id);
             await _dbContext.Registrations.AddAsync(correctionRegistration);
             await _dbContext.SaveChangesAsync();
@@ -397,6 +391,14 @@ namespace Infrastructure
         public async Task<LogpunchRegistrationDto> CreateAbsenceRegistration(Guid userId, Guid employeeId, DateTimeOffset start, DateTimeOffset end, string type, string? firstComment, string? secondComment)
         {
             RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(type);
+            RegistrationStatus registrationStatus = RegistrationStatus.Open;
+            var creationTime = DateTimeOffset.UtcNow;
+
+            LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+                ?? throw new InvalidOperationException("User not found");
+
+            LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
+                ?? throw new InvalidOperationException("Employee not found");
 
             if (registrationType != RegistrationType.Leave && registrationType != RegistrationType.Sickness && registrationType != RegistrationType.Vacation)
             {
@@ -408,24 +410,29 @@ namespace Infrastructure
                 throw new InvalidOperationException("Start cannot be later than end");
             }
 
-            LogpunchUser employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId)
-                ?? throw new InvalidOperationException("Employee not found");
+            if (!await _calenderService.IsDateValid(start))
+            {
+                throw new InvalidOperationException($"Start date was invalid - weekends and national holidays cannot count into leave, vacation or sickness");
+            }
 
-            LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
-                ?? throw new InvalidOperationException("User not found");
+            if (!await _calenderService.IsDateValid(end))
+            {
+                throw new InvalidOperationException($"End ddate was invalid - weekends and national holidays cannot count into leave, vacation or sickness");
+            }
 
             if (user.Role != UserRole.Admin)
             {
                 throw new InvalidOperationException($"Only admins can create non-work registrations ({RegistrationType.Leave}, {RegistrationType.Sickness} or {RegistrationType.Vacation})");
             }
 
-            TimeSpan timeSpan = end - start;
+            if (await IsRegistrationOverlapping(start, null, employee))
+            {
+                throw new InvalidOperationException("A registration between the start and end already exist");
+            }
+
             int daysNotIncluded = await _calenderService.HolidaysAndWeekendDatesInTimeSpan(start.DateTime, end.DateTime);
+            TimeSpan timeSpan = end - start;
             int totalDays = (int)timeSpan.TotalDays - daysNotIncluded;
-
-            RegistrationStatus registrationStatus = RegistrationStatus.Open;
-
-            var creationTime = DateTimeOffset.UtcNow;
 
             var registration = new LogpunchRegistration(employee.Id, registrationType, totalDays, start, end, user.Id, null, creationTime, registrationStatus, firstComment, secondComment, null);
             await _dbContext.Registrations.AddAsync(registration);
@@ -438,9 +445,10 @@ namespace Infrastructure
 
         public async Task<LogpunchRegistrationDto> UpdateRegistrationStatus(Guid userId, Guid registrationId, string newStatus)
         {
+            RegistrationStatus registrationStatus = RegistrationStatusConverter.ConvertStringToEnum(newStatus);
+
             LogpunchUser user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
                 ?? throw new InvalidOperationException("User not found");
-
 
             if (user.Role != UserRole.Admin)
             {
@@ -469,7 +477,6 @@ namespace Infrastructure
                 throw new InvalidOperationException("Invalid status value");
             }
 
-            RegistrationStatus registrationStatus = RegistrationStatusConverter.ConvertStringToEnum(newStatus);
 
             foreach (var reg in registrationAndCorrections)
             {
@@ -603,6 +610,66 @@ namespace Infrastructure
         {
             bool result = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Status == RegistrationStatus.Ongoing).Any();
             return result;
+        }
+
+        private async Task<bool> IsRegistrationOverlapping(DateTimeOffset start, DateTimeOffset? end, LogpunchUser employee)
+        {
+            List<LogpunchRegistration>? overlappingRegistrations;
+
+            if (end is null)
+            {
+                overlappingRegistrations = _dbContext.Registrations
+                    .Where(r => r.EmployeeId == employee.Id
+                                && r.Start <= start && r.End >= end)
+                    .ToList();
+            }
+            else
+            {
+                overlappingRegistrations = _dbContext.Registrations
+                    .Where(r => r.EmployeeId == employee.Id
+                                && ((r.Start >= start && r.Start < end)
+                                || (r.End > start && r.End <= end)
+                                || (r.Start <= start && r.End >= end)))
+                    .ToList();
+            }
+
+            List<LogpunchRegistration>? filteredData = [];
+
+            foreach (var overlappingRegistration in overlappingRegistrations)
+            {
+                LogpunchRegistration? correction = new();
+                if (overlappingRegistration.CorrectionOfId is null)
+                {
+                    correction = await _dbContext.Registrations
+                        .Where(r => r.CorrectionOfId == overlappingRegistration.Id)
+                        .OrderByDescending(r => r.CreationTime)
+                        .FirstOrDefaultAsync();
+
+                    if (correction is not null)
+                    {
+                        if (correction.Start >= start && correction.Start < end || (correction.End > start && correction.End <= end) || (correction.Start <= start && correction.End >= end))
+                        {
+                            filteredData.Add(correction);
+                        }
+                    }
+                    else
+                    {
+                        filteredData.Add(overlappingRegistration);
+                    }
+                }
+            }
+
+            if (filteredData.Count > 0)
+            {
+                foreach (var entry in filteredData)
+                {
+                    Console.WriteLine($"Id: {entry.Id} Start: {entry.Start} End: {entry.End} CorrectionOfId: {entry.CorrectionOfId}");
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

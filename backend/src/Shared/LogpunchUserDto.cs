@@ -6,16 +6,14 @@ namespace Shared
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-        public string? DefaultQuery { get; set; }
         public string Role { get; set; }
 
-        public LogpunchUserDto(Guid id, string firstName, string lastName, string email, string? defaultQuery, string role)
+        public LogpunchUserDto(Guid id, string firstName, string lastName, string email, string role)
         {
             Id = id;
             FirstName = firstName;
             LastName = lastName;
             Email = email;
-            DefaultQuery = defaultQuery;
             Role = role;
         }
 
@@ -24,7 +22,6 @@ namespace Shared
             FirstName = "";
             LastName = "";
             Email = "";
-            DefaultQuery = null;
             Role = "Employee";
         }
     }

@@ -11,5 +11,6 @@ namespace Infrastructure
         Task<int> HolidaysAndWeekendDatesInTimeSpan(DateTime startDate, DateTime endDate);
         Task<ICollection<Holiday>?> GetHolidays(DateTime startDate, DateTime endDate);
         Task<ICollection<Holiday>?> GetOnlyNationalHolidays(DateTime startDate, DateTime endDate);
+        Task<bool> IsDateValid(DateTimeOffset date);
     }
 }

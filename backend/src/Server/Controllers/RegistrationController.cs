@@ -31,8 +31,19 @@ namespace Logpunch.Controllers
             {
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
+                Guid nonNullableEmployeeId;
 
-                var registration = await _registrationService.CreateWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+                if (!request.EmployeeId.HasValue)
+                {
+                    nonNullableEmployeeId = user.Id;
+                }
+                else
+                {
+                    nonNullableEmployeeId = request.EmployeeId.Value;
+                }
+
+                var registration = await _registrationService.CreateWorkRegistration(user.Id, nonNullableEmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+
                 return Ok(registration);
             }
             catch (HttpRequestException ex)
@@ -48,9 +59,20 @@ namespace Logpunch.Controllers
             {
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
+                Guid nonNullableEmployeeId;
 
-                var startShiftRegistration = await _registrationService.StartWorkRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
-                return Ok(startShiftRegistration);
+                if (!request.EmployeeId.HasValue)
+                {
+                    nonNullableEmployeeId = user.Id;
+                }
+                else
+                {
+                    nonNullableEmployeeId = request.EmployeeId.Value;
+                }
+
+                var startRegistration = await _registrationService.StartWorkRegistration(user.Id, nonNullableEmployeeId, request.ClientId, request.FirstComment);
+
+                return Ok(startRegistration);
             }
             catch (HttpRequestException ex)
             {
@@ -65,13 +87,25 @@ namespace Logpunch.Controllers
             {
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
+                Guid nonNullableEmployeeId;
 
-                var endShiftRegistration = await _registrationService.EndWorkRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
-                if (endShiftRegistration is null)
+                if (!request.EmployeeId.HasValue)
                 {
-                    return NotFound();
+                    nonNullableEmployeeId = user.Id;
                 }
-                return Ok(endShiftRegistration);
+                else
+                {
+                    nonNullableEmployeeId = request.EmployeeId.Value;
+                }
+
+                var endRegistration = await _registrationService.EndWorkRegistration(user.Id, nonNullableEmployeeId, request.RegistrationId, request.SecondComment);
+
+                if (endRegistration is null)
+                {
+                    return NotFound("Ongoing registration was not found");
+                }
+
+                return Ok(endRegistration);
             }
             catch (HttpRequestException ex)
             {
@@ -86,8 +120,19 @@ namespace Logpunch.Controllers
             {
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
+                Guid nonNullableEmployeeId;
 
-                var registration = await _registrationService.CreateTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+                if (!request.EmployeeId.HasValue)
+                {
+                    nonNullableEmployeeId = user.Id;
+                }
+                else
+                {
+                    nonNullableEmployeeId = request.EmployeeId.Value;
+                }
+
+                var registration = await _registrationService.CreateTransportationRegistration(user.Id, nonNullableEmployeeId, request.ClientId, request.Start, request.End, request.FirstComment, request.SecondComment);
+
                 return Ok(registration);
             }
             catch (HttpRequestException ex)
@@ -103,8 +148,19 @@ namespace Logpunch.Controllers
             {
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
+                Guid nonNullableEmployeeId;
 
-                var startShiftRegistration = await _registrationService.StartTransportationRegistration(user.Id, request.EmployeeId, request.ClientId, request.FirstComment);
+                if (!request.EmployeeId.HasValue)
+                {
+                    nonNullableEmployeeId = user.Id;
+                }
+                else
+                {
+                    nonNullableEmployeeId = request.EmployeeId.Value;
+                }
+
+                var startShiftRegistration = await _registrationService.StartTransportationRegistration(user.Id, nonNullableEmployeeId, request.ClientId, request.FirstComment);
+
                 return Ok(startShiftRegistration);
             }
             catch (HttpRequestException ex)
@@ -120,13 +176,25 @@ namespace Logpunch.Controllers
             {
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
+                Guid nonNullableEmployeeId;
 
-                var endShiftRegistration = await _registrationService.EndTransportationRegistration(user.Id, request.EmployeeId, request.RegistrationId, request.SecondComment);
-                if (endShiftRegistration is null)
+                if (!request.EmployeeId.HasValue)
                 {
-                    return NotFound();
+                    nonNullableEmployeeId = user.Id;
                 }
-                return Ok(endShiftRegistration);
+                else
+                {
+                    nonNullableEmployeeId = request.EmployeeId.Value;
+                }
+
+                var endRegistration = await _registrationService.EndTransportationRegistration(user.Id, nonNullableEmployeeId, request.RegistrationId, request.SecondComment);
+
+                if (endRegistration is null)
+                {
+                    return NotFound("Ongoing registration was not found");
+                }
+
+                return Ok(endRegistration);
             }
             catch (HttpRequestException ex)
             {
@@ -144,10 +212,12 @@ namespace Logpunch.Controllers
                 var user = await _loginService.ValidateToken(token);
 
                 var confirmedRegistration = await _registrationService.EmployeeConfirmationRegistration(user.Id, request.RegistrationId);
+
                 if (confirmedRegistration is null)
                 {
-                    return NotFound();
+                    return NotFound("Registration was not found");
                 }
+
                 return Ok(confirmedRegistration);
             }
             catch (HttpRequestException ex)
@@ -165,10 +235,12 @@ namespace Logpunch.Controllers
                 var user = await _loginService.ValidateToken(token);
 
                 var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(user.Id, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+
                 if (correctionRegistration is null)
                 {
-                    return NotFound();
+                    return NotFound("Registration was not found");
                 }
+
                 return Ok(correctionRegistration);
             }
             catch (HttpRequestException ex)
@@ -187,6 +259,12 @@ namespace Logpunch.Controllers
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
                 var registration = await _registrationService.CreateAbsenceRegistration(user.Id, request.EmployeeId, request.Start, request.End, request.Type, request.FirstComment, request.SecondComment);
+
+                if (registration is null)
+                {
+                    return NotFound("Registration was not found");
+                }
+
                 return Ok(registration);
             }
             catch (HttpRequestException ex)
@@ -204,10 +282,12 @@ namespace Logpunch.Controllers
                 var user = await _loginService.ValidateToken(token);
 
                 var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Status);
+
                 if (registration is null)
                 {
-                    return NotFound();
+                    return NotFound("Registration was not found");
                 }
+
                 return Ok(registration);
             }
             catch (HttpRequestException ex)
@@ -225,10 +305,12 @@ namespace Logpunch.Controllers
                 var user = await _loginService.ValidateToken(token);
 
                 var registration = await _registrationService.UpdateRegistrationStatus(user.Id, request.RegistrationId, request.Type);
+
                 if (registration is null)
                 {
-                    return NotFound();
+                    return NotFound("Registration was not found");
                 }
+
                 return Ok(registration);
             }
             catch (HttpRequestException ex)
@@ -246,10 +328,12 @@ namespace Logpunch.Controllers
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
                 var correctionRegistration = await _registrationService.AdminCorrectionRegistration(user.Id, request.EmployeeId, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+
                 if (correctionRegistration is null)
                 {
-                    return NotFound();
+                    return NotFound("Registration was not found");
                 }
+
                 return Ok(correctionRegistration);
             }
             catch (HttpRequestException ex)

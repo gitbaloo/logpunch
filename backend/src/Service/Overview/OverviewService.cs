@@ -13,7 +13,6 @@ namespace Infrastructure
     public class OverviewService : IOverviewService
     {
         private readonly LogpunchDbContext _dbContext;
-        private static readonly List<string> TimeUnitOrder = ["day", "week", "month", "year"];
 
         public OverviewService(LogpunchDbContext dbContext)
         {
@@ -22,26 +21,22 @@ namespace Infrastructure
 
         // Work
 
-        public async Task<LogpunchRegistrationDto?> GetOngoingRegistration(Guid userId, Guid? employeeId)
+        public async Task<LogpunchRegistrationDto?> GetOngoingRegistration(Guid userId, Guid employeeId)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
+            var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
+            if (employeeId != userId)
             {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
-            {
-                employee = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == employeeId.Value) ?? throw new InvalidOperationException("No employee with given ID exists");
+                employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only look at your own ongoing registration");
+                employee = user;
             }
 
             var ongoingRegistration = await _dbContext.Registrations.FirstOrDefaultAsync(or =>
-                or.Status == RegistrationStatus.Ongoing && or.EmployeeId == employee.Id && or.CorrectionOfId == null && or.Type == RegistrationType.Work);
+                or.Status == RegistrationStatus.Ongoing && or.EmployeeId == employee.Id && or.CorrectionOfId == null);
 
             if (ongoingRegistration is null)
             {
@@ -66,25 +61,21 @@ namespace Infrastructure
             return registrationDto;
         }
 
-        public async Task<List<LogpunchRegistrationDto>> GetUnsettledWorkRegistrations(Guid userId, Guid? employeeId)
+        public async Task<List<LogpunchRegistrationDto>> GetUnsettledWorkRegistrations(Guid userId, Guid employeeId)
         {
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only see your own registrations");
+                employee = user;
             }
 
-            List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Work && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Ongoing || r.Status != RegistrationStatus.Settled).ToList();
+            List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Work && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Ongoing && r.Status != RegistrationStatus.Settled).ToList();
 
             List<LogpunchRegistrationDto> registrationDtos = [];
 
@@ -107,7 +98,7 @@ namespace Infrastructure
             return registrationDtos;
         }
 
-        public async Task<OverviewResponse> WorkOverviewQuery(Guid userId, Guid? employeeId, bool sortAsc, bool showDaysWithNoRecords, bool setDefault,
+        public async Task<OverviewResponse> WorkOverviewQuery(Guid userId, Guid employeeId, bool sortAsc, bool showUnitsWithNoRecords, bool setDefault,
                 DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy)
         {
             RegistrationType registrationType = RegistrationType.Work;
@@ -117,27 +108,23 @@ namespace Infrastructure
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null || employeeId == user.Id)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You cannot look at another employees overview if you aren't an admin");
+                employee = user;
             }
 
 
             if (endDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, set_default={setDefault}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
             else
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, set_default={setDefault}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
 
             if (employee is null)
@@ -148,11 +135,6 @@ namespace Infrastructure
             if (timeMode != "custom" && endDate.HasValue || timePeriod != "custom" && endDate.HasValue)
             {
                 throw new ArgumentException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
-            }
-
-            if (showDaysWithNoRecords && groupBy != "day" && thenBy != "day")
-            {
-                throw new ArgumentException($"Invalid input combination: groupBy or thenBy have to be 'day' in order to show days with no records. showDaysWithNoRecords was {showDaysWithNoRecords} while groupBy was {groupBy} and thenBy was {thenBy}.");
             }
 
             if (endDate < startDate)
@@ -184,7 +166,7 @@ namespace Infrastructure
                 throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
             }
 
-            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showDaysWithNoRecords, registrationType, thenBy);
+            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
             int total = 0;
 
             foreach (var groupByObject in groupByObjects)
@@ -260,25 +242,21 @@ namespace Infrastructure
 
         // Transportation
 
-        public async Task<List<LogpunchRegistrationDto>> GetUnsettledTransportationRegistrations(Guid userId, Guid? employeeId)
+        public async Task<List<LogpunchRegistrationDto>> GetUnsettledTransportationRegistrations(Guid userId, Guid employeeId)
         {
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You can only see your own registrations");
+                employee = user;
             }
 
-            List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Transportation && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Settled).ToList();
+            List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type == RegistrationType.Transportation && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Ongoing && r.Status != RegistrationStatus.Settled).ToList();
 
             List<LogpunchRegistrationDto> registrationDtos = [];
 
@@ -301,7 +279,7 @@ namespace Infrastructure
             return registrationDtos;
         }
 
-        public async Task<OverviewResponse> TransportationOverviewQuery(Guid userId, Guid? employeeId, bool sortAsc, bool showDaysWithNoRecords,
+        public async Task<OverviewResponse> TransportationOverviewQuery(Guid userId, Guid employeeId, bool sortAsc, bool showUnitsWithNoRecords,
                DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy)
         {
             RegistrationType registrationType = RegistrationType.Transportation;
@@ -311,27 +289,23 @@ namespace Infrastructure
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You cannot look at another employees overview");
+                employee = user;
             }
 
 
             if (endDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
             else
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
 
             if (employee is null)
@@ -342,11 +316,6 @@ namespace Infrastructure
             if (timeMode != "custom" && endDate.HasValue || timePeriod != "custom" && endDate.HasValue)
             {
                 throw new ArgumentException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
-            }
-
-            if (showDaysWithNoRecords && groupBy != "day" && thenBy != "day")
-            {
-                throw new ArgumentException($"Invalid input combination: groupBy or thenBy have to be 'day' in order to show days with no records. showDaysWithNoRecords was {showDaysWithNoRecords} while groupBy was {groupBy} and thenBy was {thenBy}.");
             }
 
             if (endDate < startDate)
@@ -379,7 +348,7 @@ namespace Infrastructure
                 throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
             }
 
-            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showDaysWithNoRecords, registrationType, thenBy);
+            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
             int total = 0;
 
             foreach (var groupByObject in groupByObjects)
@@ -431,25 +400,21 @@ namespace Infrastructure
 
         // Absence
 
-        public async Task<List<LogpunchRegistrationDto>> GetUnsettledAbsenceRegistrations(Guid userId, Guid? employeeId)
+        public async Task<List<LogpunchRegistrationDto>> GetUnsettledAbsenceRegistrations(Guid userId, Guid employeeId)
         {
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
+            if (userId == employeeId)
             {
                 employee = user;
             }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
-            {
-                employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
-            }
             else
             {
-                throw new InvalidOperationException("You can only see your own registrations");
+                employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No user with given ID exists");
             }
 
-            List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type != RegistrationType.Work && r.Type != RegistrationType.Transportation && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Settled).ToList();
+            List<LogpunchRegistration> registrations = _dbContext.Registrations.Where(r => r.EmployeeId == employeeId && r.Type != RegistrationType.Work && r.Type != RegistrationType.Transportation && r.CorrectionOfId == null).Where(r => r.Status != RegistrationStatus.Ongoing && r.Status != RegistrationStatus.Settled).ToList();
 
             List<LogpunchRegistrationDto> registrationDtos = [];
 
@@ -472,7 +437,7 @@ namespace Infrastructure
             return registrationDtos;
         }
 
-        public async Task<OverviewResponse> AbsenceOverviewQuery(Guid userId, Guid? employeeId, bool sortAsc, bool showDaysWithNoRecords,
+        public async Task<OverviewResponse> AbsenceOverviewQuery(Guid userId, Guid employeeId, bool sortAsc, bool showUnitsWithNoRecords,
                 DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy, string absenceType)
         {
             RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(absenceType);
@@ -488,26 +453,22 @@ namespace Infrastructure
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
 
-            if (employeeId is null)
-            {
-                employee = user;
-            }
-            else if (employeeId is not null && user.Role == UserRole.Admin)
+            if (employeeId != userId)
             {
                 employee = _dbContext.Users.FirstOrDefault(u => u.Id == employeeId) ?? throw new InvalidOperationException("No employee with given ID exists");
             }
             else
             {
-                throw new InvalidOperationException("You cannot look at another employees overview");
+                employee = user;
             }
 
             if (endDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}, absence_type={absenceType}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}, absence_type={absenceType}";
             }
             else
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showDaysWithNoRecords}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
 
             if (employee is null)
@@ -518,11 +479,6 @@ namespace Infrastructure
             if (timeMode != "custom" && endDate.HasValue || timePeriod != "custom" && endDate.HasValue)
             {
                 throw new ArgumentException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
-            }
-
-            if (showDaysWithNoRecords && groupBy != "day" && thenBy != "day")
-            {
-                throw new ArgumentException($"Invalid input combination: groupBy or thenBy have to be 'day' in order to show days with no records. showDaysWithNoRecords was {showDaysWithNoRecords} while groupBy was {groupBy} and thenBy was {thenBy}.");
             }
 
             if (endDate < startDate)
@@ -559,7 +515,7 @@ namespace Infrastructure
                 throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
             }
 
-            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showDaysWithNoRecords, registrationType, thenBy);
+            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
             int total = 0;
 
             foreach (var groupByObject in groupByObjects)
@@ -611,8 +567,18 @@ namespace Infrastructure
 
         // Helper methods
 
-        private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset startDate, DateTimeOffset endDate, bool showDaysWithNoRecords, RegistrationType registrationType, string thenBy)
+        private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset startDate, DateTimeOffset endDate, bool showUnitsWithNoRecords, RegistrationType registrationType, string thenBy, string timePeriod)
         {
+            if (CalenderService.TimeUnitOrder.Contains(groupBy) && CalenderService.TimeUnitOrder.Contains(timePeriod))
+            {
+                if (CalenderService.TimeUnitOrder.IndexOf(groupBy) >= CalenderService.TimeUnitOrder.IndexOf(timePeriod))
+                {
+                    // If groupBy is equal or larger than timePeriod, adjust groupBy to be one level smaller than timePeriod
+                    int timePeriodIndex = CalenderService.TimeUnitOrder.IndexOf(timePeriod);
+                    groupBy = timePeriodIndex > 0 ? CalenderService.TimeUnitOrder[timePeriodIndex - 1] : timePeriod;
+                }
+            }
+
             List<GroupByObject> result = new List<GroupByObject>();
 
             var employeeClientRelationIds = await _dbContext.EmployeeClientRelations
@@ -668,11 +634,11 @@ namespace Infrastructure
 
             result = groupBy switch
             {
-                "day" => GroupByDay(finalData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "week" => GroupByWeek(finalData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "month" => GroupByMonth(finalData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "year" => GroupByYear(finalData, showDaysWithNoRecords, startDate, endDate, thenBy),
-                "client" => await GroupByClient(finalData, employeeClientRelationIds, startDate, endDate, thenBy),
+                "day" => GroupByDay(finalData, showUnitsWithNoRecords, startDate, endDate, thenBy),
+                "week" => GroupByWeek(finalData, showUnitsWithNoRecords, startDate, endDate, thenBy),
+                "month" => GroupByMonth(finalData, showUnitsWithNoRecords, startDate, endDate, thenBy),
+                "year" => GroupByYear(finalData, showUnitsWithNoRecords, startDate, endDate, thenBy),
+                "client" => GroupByClient(finalData, showUnitsWithNoRecords, employeeClientRelationIds, startDate, endDate, thenBy),
                 _ => throw new ArgumentException($"Invalid groupby option selected: {groupBy}")
             };
 
@@ -682,13 +648,13 @@ namespace Infrastructure
         private List<ThenByObject> GetThenByObjects(IEnumerable<LogpunchRegistrationDto> group, string thenBy, string groupBy)
         {
             // Check if thenBy is a valid time unit and is larger or equal to groupBy
-            if (TimeUnitOrder.Contains(thenBy) && TimeUnitOrder.Contains(groupBy))
+            if (CalenderService.TimeUnitOrder.Contains(thenBy) && CalenderService.TimeUnitOrder.Contains(groupBy))
             {
-                if (TimeUnitOrder.IndexOf(thenBy) >= TimeUnitOrder.IndexOf(groupBy))
+                if (CalenderService.TimeUnitOrder.IndexOf(thenBy) >= CalenderService.TimeUnitOrder.IndexOf(groupBy))
                 {
                     // If thenBy is equal or larger than groupBy, adjust thenBy to be one level smaller than groupBy
-                    int groupByIndex = TimeUnitOrder.IndexOf(groupBy);
-                    thenBy = groupByIndex > 0 ? TimeUnitOrder[groupByIndex - 1] : groupBy;
+                    int groupByIndex = CalenderService.TimeUnitOrder.IndexOf(groupBy);
+                    thenBy = groupByIndex > 0 ? CalenderService.TimeUnitOrder[groupByIndex - 1] : groupBy;
                 }
             }
 
@@ -722,7 +688,7 @@ namespace Infrastructure
             };
         }
 
-        private List<GroupByObject> GroupByDay(List<LogpunchRegistrationDto> correctedData, bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+        private List<GroupByObject> GroupByDay(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
             var result = correctedData
                 .GroupBy(r => r.Start.Date)
@@ -733,7 +699,7 @@ namespace Infrastructure
                 ))
                 .ToList();
 
-            if (showDaysWithNoRecords)
+            if (showUnitsWithNoRecords)
             {
                 var allDates = Enumerable.Range(0, 1 + endDate.Subtract(startDate).Days)
                     .Select(offset => startDate.AddDays(offset))
@@ -750,7 +716,7 @@ namespace Infrastructure
             return result;
         }
 
-        private List<GroupByObject> GroupByWeek(List<LogpunchRegistrationDto> correctedData, bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+        private List<GroupByObject> GroupByWeek(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
             var result = correctedData
                 .GroupBy(r => new { r.Start.Year, Week = CalenderService.GetDanishWeekNumber(r.Start) })
@@ -761,10 +727,28 @@ namespace Infrastructure
                 ))
                 .ToList();
 
+            if (showUnitsWithNoRecords)
+            {
+                var startWeek = CalenderService.GetDanishWeekNumber(startDate);
+                var endWeek = CalenderService.GetDanishWeekNumber(endDate);
+                var allWeeks = Enumerable.Range(0, endDate.Subtract(startDate).Days / 7 + 1)
+                    .Select(offset => startDate.AddDays(offset * 7))
+                    .Select(date => new { date.Year, Week = CalenderService.GetDanishWeekNumber(date) })
+                    .Distinct()
+                    .Select(week => $"Week {week.Week}, {week.Year}");
+
+                var missingWeeks = allWeeks.Except(result.Select(r => r.Name));
+
+                var missingGroupByObjects = missingWeeks.Select(week => new GroupByObject(week, 0, new List<ThenByObject>()));
+
+                result.AddRange(missingGroupByObjects);
+                result = result.OrderBy(r => DateTime.ParseExact(r.Name.Split(',')[1].Trim() + "-W" + r.Name.Split(' ')[1], "yyyy-Www", CultureInfo.InvariantCulture)).ToList();
+            }
+
             return result;
         }
 
-        private List<GroupByObject> GroupByMonth(List<LogpunchRegistrationDto> correctedData, bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+        private List<GroupByObject> GroupByMonth(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
             var result = correctedData
                 .GroupBy(r => new { r.Start.Year, r.Start.Month })
@@ -775,10 +759,24 @@ namespace Infrastructure
                 ))
                 .ToList();
 
+            if (showUnitsWithNoRecords)
+            {
+                var allMonths = Enumerable.Range(0, ((endDate.Year - startDate.Year) * 12) + endDate.Month - startDate.Month + 1)
+                    .Select(offset => startDate.AddMonths(offset))
+                    .Select(date => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(date.Month) + $" {date.Year}");
+
+                var missingMonths = allMonths.Except(result.Select(r => r.Name));
+
+                var missingGroupByObjects = missingMonths.Select(month => new GroupByObject(month, 0, new List<ThenByObject>()));
+
+                result.AddRange(missingGroupByObjects);
+                result = result.OrderBy(r => DateTime.ParseExact(r.Name, "MMMM yyyy", CultureInfo.InvariantCulture)).ToList();
+            }
+
             return result;
         }
 
-        private List<GroupByObject> GroupByYear(List<LogpunchRegistrationDto> correctedData, bool showDaysWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+        private List<GroupByObject> GroupByYear(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
             var result = correctedData
                 .GroupBy(r => new { r.Start.Year })
@@ -789,78 +787,55 @@ namespace Infrastructure
                 ))
                 .ToList();
 
+            if (showUnitsWithNoRecords)
+            {
+                var allYears = Enumerable.Range(startDate.Year, endDate.Year - startDate.Year + 1)
+                    .Select(year => year.ToString());
+
+                var missingYears = allYears.Except(result.Select(r => r.Name));
+
+                var missingGroupByObjects = missingYears.Select(year => new GroupByObject(year, 0, new List<ThenByObject>()));
+
+                result.AddRange(missingGroupByObjects);
+                result = result.OrderBy(r => int.Parse(r.Name)).ToList();
+            }
+
             return result;
         }
 
-        private async Task<List<GroupByObject>> GroupByClient(List<LogpunchRegistrationDto> correctedData, List<Guid> employeeClientRelationIds, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
+        private List<GroupByObject> GroupByClient(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, List<Guid> employeeClientRelationIds, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
-            var groupedData = await _dbContext.Registrations
-                .Join(_dbContext.EmployeeClientRelations,
-                    r => r.ClientId,
-                    ecr => ecr.ClientId,
-                    (r, ecr) => new { r, ecr })
-                .Join(_dbContext.Clients,
-                    joined => joined.ecr.ClientId,
-                    c => c.Id,
-                    (joined, c) => new { joined.r, joined.ecr, c })
-                .Where(joined => (joined.r.ClientId == null || employeeClientRelationIds.Contains(joined.ecr.ClientId))
-                                 && joined.r.Start >= startDate
-                                 && joined.r.Start <= endDate)
-                .Select(joined => new
+            var groupedData = correctedData
+                .GroupBy(r => r.ClientId)
+                .Select(group => new
                 {
-                    joined.r.Id,
-                    joined.r.EmployeeId,
-                    joined.r.Type,
-                    joined.r.Amount,
-                    joined.r.Start,
-                    joined.r.End,
-                    joined.r.CreatorId,
-                    joined.r.ClientId,
-                    joined.r.CreationTime,
-                    joined.r.Status,
-                    joined.r.FirstComment,
-                    joined.r.SecondComment,
-                    joined.r.CorrectionOfId,
-                    ClientName = joined.c.Name ?? "No Client"
+                    ClientId = group.Key,
+                    TotalAmount = group.Sum(item => item.Amount ?? 0),
+                    Registrations = group
                 })
-                .ToListAsync();
+                .ToList();
 
-            var correctedGroupedData = new List<(Guid Id, Guid EmployeeId, string Type, int? Amount, DateTimeOffset Start, DateTimeOffset? End, Guid CreatorId, Guid? ClientId, DateTimeOffset CreationTime, string Status, string? FirstComment, string? SecondComment, Guid? CorrectionOfId, string ClientName)>();
-
-            foreach (var data in groupedData)
-            {
-                var correction = await GetMostRecentCorrection(data.Id);
-                if (correction is not null)
-                {
-                    correctedGroupedData.Add((data.Id, data.EmployeeId, data.Type.ToString(), correction.Amount, correction.Start, correction.End, data.CreatorId, correction.ClientId, data.CreationTime, data.Status.ToString(), correction.FirstComment, correction.SecondComment, null, data.ClientName));
-                }
-                else
-                {
-                    correctedGroupedData.Add((data.Id, data.EmployeeId, data.Type.ToString(), data.Amount, data.Start, data.End, data.CreatorId, data.ClientId, data.CreationTime, data.Status.ToString(), data.FirstComment, data.SecondComment, data.CorrectionOfId, data.ClientName));
-                }
-            }
-
-            var result = correctedGroupedData
-                .GroupBy(g => g.ClientName)
+            var result = groupedData
                 .Select(group => new GroupByObject(
-                    group.Key,
-                    group.Sum(item => item.Amount ?? 0),
-                    GetThenByObjects(group.Select(x => new LogpunchRegistrationDto(
-                        x.Id,
-                        x.EmployeeId,
-                        x.Type,
-                        x.Amount,
-                        x.Start,
-                        x.End,
-                        x.CreatorId,
-                        x.ClientId,
-                        x.CreationTime,
-                        x.Status,
-                        x.FirstComment,
-                        x.SecondComment,
-                        x.CorrectionOfId)), thenBy, "client")
+                    GetClientName(group.ClientId),
+                    group.TotalAmount,
+                    GetThenByObjects(group.Registrations, thenBy, "client")
                 ))
                 .ToList();
+
+            if (showUnitsWithNoRecords)
+            {
+                var allClients = _dbContext.Clients
+                    .Select(c => c.Name ?? "No Client")
+                    .ToList();
+
+                var missingClients = allClients.Except(result.Select(r => r.Name));
+
+                var missingGroupByObjects = missingClients.Select(client => new GroupByObject(client, 0, new List<ThenByObject>()));
+
+                result.AddRange(missingGroupByObjects);
+                result = result.OrderBy(r => r.Name).ToList();
+            }
 
             return result;
         }

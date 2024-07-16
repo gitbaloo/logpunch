@@ -2,46 +2,47 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Login;
 
-namespace Logpunch.Controllers;
-
-[ApiController]
-[Route("api/login")]
-public class LoginController : ControllerBase
+namespace Logpunch.Controllers
 {
-    private readonly ILoginService _loginService;
-
-    public LoginController(ILoginService loginService)
+    [ApiController]
+    [Route("api/login")]
+    public class LoginController : ControllerBase
     {
-        _loginService = loginService;
-    }
+        private readonly ILoginService _loginService;
 
-    [AllowAnonymous]
-    [HttpPost("authorize")]
-    public async Task<IActionResult> AuthorizeLogin([FromForm] string email, [FromForm] string password)
-    {
-        try
+        public LoginController(ILoginService loginService)
         {
-            var user = await _loginService.AuthorizeLogin(email, password);
-            return Ok(user);
+            _loginService = loginService;
         }
-        catch (ArgumentException e)
-        {
-            return Unauthorized(e.Message);
-        }
-    }
 
-    [HttpGet("authenticate")]
-    public async Task<ActionResult> AuthenticateUser(string token)
-    {
-        try
+        [AllowAnonymous]
+        [HttpPost("authorize")]
+        public async Task<IActionResult> AuthorizeLogin([FromForm] string email, [FromForm] string password)
         {
-            var user = await _loginService.ValidateToken(token);
-            return Ok(user);
+            try
+            {
+                var user = await _loginService.AuthorizeLogin(email, password);
+                return Ok(user);
+            }
+            catch (ArgumentException e)
+            {
+                return Unauthorized(e.Message);
+            }
         }
-        catch (Exception e)
+
+        [HttpGet("authenticate")]
+        public async Task<ActionResult> AuthenticateUser()
         {
-            ValidationProblem(e.Message);
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var user = await _loginService.ValidateToken(token);
+                return Ok(user);
+            }
+            catch (Exception e)
+            {
+                return ValidationProblem(e.Message);
+            }
         }
-        return ValidationProblem("Unable to validate user");
     }
 }

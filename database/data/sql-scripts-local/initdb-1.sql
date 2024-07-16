@@ -43,7 +43,7 @@ CREATE TABLE Logpunch_Registrations (
     CONSTRAINT FKClient FOREIGN KEY (ClientId) REFERENCES Logpunch_Clients (Id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT FKCorrectionOf FOREIGN KEY (CorrectionOf_Id) REFERENCES Logpunch_Registrations (Id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT chk_registration_type CHECK (
-        Registration_Type IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+        Registration_Type IN (0, 1, 2, 3, 4)
     ),
     CONSTRAINT chk_status_type CHECK (
         Status_Type IN (0, 1, 2, 3, 4, 5)

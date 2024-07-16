@@ -1,24 +1,25 @@
-namespace Shared;
-
-public class GroupByObject
+namespace Shared
 {
-    public string Name { get; set; }
-    public double Total { get; set; }
-    public List<ThenByObject> ThenByObjects { get; set; }
-
-    // Constructor without ThenByObjects
-    public GroupByObject(string name, double total)
+    public class GroupByObject
     {
-        Name = name;
-        Total = total;
-        ThenByObjects = new List<ThenByObject>(); // Initialize with empty list or null based on your requirement
-    }
+        public string Name { get; set; }
+        public int? Total { get; set; }
+        public List<ThenByObject> ThenByObjects { get; set; }
 
-    // Constructor with ThenByObjects
-    public GroupByObject(string name, double total, List<ThenByObject> thenByObjects)
-    {
-        Name = name;
-        Total = total;
-        ThenByObjects = thenByObjects;
+        // Constructor without ThenByObjects
+        public GroupByObject(string name, int? total)
+        {
+            Name = name;
+            Total = total;
+            ThenByObjects = []; // Initialize with empty list or null based on your requirement
+        }
+
+        // Constructor with ThenByObjects
+        public GroupByObject(string name, int? total, List<ThenByObject> thenByObjects)
+        {
+            Name = name;
+            Total = total;
+            ThenByObjects = thenByObjects;
+        }
     }
 }

@@ -3,66 +3,51 @@ using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Shared;
 
-namespace Infrastructure.Client;
-
-public class ClientService : IClientService
+namespace Infrastructure
 {
-    private readonly LogpunchDbContext _dbContext;
-
-    public ClientService(LogpunchDbContext dbContext)
+    public class ClientService : IClientService
     {
-        _dbContext = dbContext;
-    }
+        private readonly LogpunchDbContext _dbContext;
 
-    public async Task<List<LogpunchClientDto>> GetClients(Guid employeeId)
-    {
-        var employeeClientRelations = await _dbContext.EmployeeClientRelations
-            .Where(ecr => ecr.EmployeeId == employeeId)
-            .Include(ecr => ecr.Client)
-            .ToListAsync();
-
-        var clients = new List<LogpunchClientDto>();
-
-        if (employeeClientRelations is null || !employeeClientRelations.Any())
+        public ClientService(LogpunchDbContext dbContext)
         {
-            Console.WriteLine("Employee has no relation to any clients");
+            _dbContext = dbContext;
+        }
+
+        public async Task<List<LogpunchClientDto>> GetClients(Guid employeeId)
+        {
+            var employeeClientRelations = await _dbContext.EmployeeClientRelations
+                .Where(ecr => ecr.EmployeeId == employeeId)
+                .Include(ecr => ecr.Client)
+                .ToListAsync();
+
+            var clients = new List<LogpunchClientDto>();
+
+            if (employeeClientRelations is null || !employeeClientRelations.Any())
+            {
+                Console.WriteLine("Employee has no relation to any clients");
+                return clients;
+            }
+
+            foreach (var employeeClientRelation in employeeClientRelations)
+            {
+                if (employeeClientRelation.Client is not null)
+                {
+                    LogpunchClientDto client = new()
+                    {
+                        Id = employeeClientRelation.ClientId,
+                        Name = employeeClientRelation.Client.Name
+                    };
+
+                    clients.Add(client);
+                }
+                else
+                {
+                    Console.WriteLine($"Client is null for relation with EmployeeId: {employeeClientRelation.EmployeeId}");
+                }
+            }
+
             return clients;
         }
-
-        foreach (var employeeClientRelation in employeeClientRelations)
-        {
-            if (employeeClientRelation.Client is not null)
-            {
-                LogpunchClientDto client = new LogpunchClientDto()
-                {
-                    Id = employeeClientRelation.ClientId,
-                    Name = employeeClientRelation.Client.Name
-                };
-
-                clients.Add(client);
-            }
-            else
-            {
-                Console.WriteLine($"Client is null for relation with EmployeeId: {employeeClientRelation.EmployeeId}");
-            }
-        }
-
-        return clients;
     }
-
-    //     public async Task<List<int>> GetMostRecent(IQueryable<EmployeeClientRelation> dbEntry)
-    // {
-    //     var recentActivities = await _dbContext.Registrations
-    //         .Where(r => dbEntry.Any(ecr => ecr.Id == r.LogpunchTask))
-    //         .GroupBy(tr => tr.LogpunchTask)
-    //         .Select(g => new
-    //         {
-    //             ConsultantCustomerId = g.Key,
-    //             MostRecentDate = g.Max(tr => tr.RegistrationDate)
-    //         })
-    //         .OrderBy(lt => lt.MostRecentDate)
-    //         .Select(tr => tr.ConsultantCustomerId).Distinct().ToListAsync();
-
-    //     return recentActivities;
-    // }
 }

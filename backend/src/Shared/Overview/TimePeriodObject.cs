@@ -1,11 +1,12 @@
-namespace Shared;
-
-public class TimePeriodObject
+namespace Shared
 {
-    public List<GroupByObject> GroupByObjects { get; set; }
-
-    public TimePeriodObject(List<GroupByObject> groupByObjects)
+    public class TimePeriodObject
     {
-        GroupByObjects = groupByObjects;
+        public List<GroupByObject> GroupByObjects { get; set; }
+
+        public TimePeriodObject(List<GroupByObject> groupByObjects)
+        {
+            GroupByObjects = groupByObjects;
+        }
     }
 }

@@ -1,20 +1,21 @@
 using Newtonsoft.Json;
-namespace Domain;
-
-public class LogpunchClient : Entity
+namespace Domain
 {
-    public string Name { get; set; }
-
-    [JsonIgnore]
-    public ICollection<EmployeeClientRelation>? EmployeeClientRelations { get; set; }
-
-    public LogpunchClient(string name)
+    public class LogpunchClient : Entity
     {
-        Name = name;
-    }
+        public string Name { get; set; }
 
-    public LogpunchClient()
-    {
-        Name = string.Empty;
+        [JsonIgnore]
+        public ICollection<EmployeeClientRelation>? EmployeeClientRelations { get; set; }
+
+        public LogpunchClient(string name)
+        {
+            Name = name;
+        }
+
+        public LogpunchClient()
+        {
+            Name = string.Empty;
+        }
     }
 }

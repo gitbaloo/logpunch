@@ -16,11 +16,11 @@ services:
       - JWT_AUDIENCE=Audience
       - ConnectionStrings__LogpunchDb=Host=database;Database=logpunchdb;Username=logpunchuser;Password=logpunch1234
     networks:
-      - pgnetwork
+      - logpunch_network
     volumes:
       - ./src/Server/appsettings.json:/app/appsettings.json
       - ./src/Server/appsettings.Development.json:/app/appsettings.Development.json
 
 networks:
-  pgnetwork:
+  logpunch_network:
     external: true

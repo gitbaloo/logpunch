@@ -15,17 +15,17 @@ change_directory() {
 
 # Stop the database (and pgAdmin 4)
 echo "Stopping database..."
-change_directory "$SCRIPT_DIR/database/"
-docker compose down
+change_directory "$SCRIPT_DIR/database/data/"
+docker compose down -v
 
 # Stop the backend
 echo "Stopping backend..."
-change_directory "$SCRIPT_DIR/backend/"
-docker compose down
+change_directory "$SCRIPT_DIR/backend/src/Server/"
+docker compose down -v
 
 # Stop the frontend
 # echo "Stopping frontend..."
 # change_directory "$SCRIPT_DIR/frontend/"
-# docker compose down
+# docker compose down -v
 
-echo "All services stopped!"
+echo "All services stopped and all volumes taken down!"

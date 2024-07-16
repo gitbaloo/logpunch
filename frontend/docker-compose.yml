@@ -15,8 +15,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - VITE_APP_ENV=docker
     networks:
-      - pgnetwork
+      - logpunch_network
 
 networks:
-  pgnetwork:
+  logpunch_network:
     external: true

@@ -7,12 +7,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./sql-scripts-local:/docker-entrypoint-initdb.d
+      - ./data/sql-scripts-local:/docker-entrypoint-initdb.d
     ports:
       - "5433:5432"
 
     networks:
-      - pgnetwork
+      - logpunch_network
     restart: unless-stopped
 
   pgadmin:
@@ -26,11 +26,11 @@ services:
     ports:
       - "8081:80"
     volumes:
-      - ./pgadmin_data:/var/lib/pgadmin
-      - ./servers.json:/pgadmin4/servers.json
-      - ./pgpassfile:/pgpassfile
+      - ./data/pgadmin_data:/var/lib/pgadmin
+      - ./data/servers.json:/pgadmin4/servers.json
+      - ./data/pgpassfile:/pgpassfile
     networks:
-      - pgnetwork
+      - logpunch_network
     depends_on:
       - database
     restart: unless-stopped
@@ -40,5 +40,5 @@ volumes:
   pgadmin_data:
 
 networks:
-  pgnetwork:
+  logpunch_network:
     external: true

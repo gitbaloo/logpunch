@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:7206/api/login"; // Update with your actual backend URL
+const API_URL = "http://localhost:7206/api/login";
 
 export const authorizeLogin = async (email: string, password: string) => {
   const response = await axios.post(
@@ -15,5 +15,14 @@ export const authorizeLogin = async (email: string, password: string) => {
       },
     }
   );
+  return response.data;
+};
+
+export const authenticateUser = async (token: string) => {
+  const response = await axios.get(`${API_URL}/authenticate`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };

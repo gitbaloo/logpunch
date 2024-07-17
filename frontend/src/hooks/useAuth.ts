@@ -1,25 +1,51 @@
 import { useState, useEffect } from "react";
-import { authorizeLogin } from "../services/api";
+import { authorizeLogin, authenticateUser } from "../services/api";
+import { useNavigate } from "react-router-dom";
+
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+}
 
 export const useAuth = () => {
   const [token, setToken] = useState<string | null>(() =>
     localStorage.getItem("token")
   );
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-    }
+    const checkAuthentication = async () => {
+      if (token) {
+        try {
+          const user = await authenticateUser(token);
+          setUser(user);
+          setIsAuthenticated(true);
+        } catch (error) {
+          setIsAuthenticated(false);
+          localStorage.removeItem("token");
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuthentication();
   }, [token]);
 
   const login = async (email: string, password: string) => {
     try {
       const token = await authorizeLogin(email, password);
       setToken(token);
+      localStorage.setItem("token", token);
       setError(null);
+      setIsAuthenticated(true);
+      navigate("/dashboard");
     } catch (error) {
       setError("Login failed: Invalid email or password");
     }
@@ -27,7 +53,11 @@ export const useAuth = () => {
 
   const logout = () => {
     setToken(null);
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    setUser(null);
+    navigate("/login");
   };
 
-  return { token, error, login, logout };
+  return { token, error, login, logout, isAuthenticated, user };
 };

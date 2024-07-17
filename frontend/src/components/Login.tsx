@@ -1,8 +1,9 @@
+// src/components/Login.tsx
 import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
 const Login: React.FC = () => {
-  const { token, error, login, logout } = useAuth();
+  const { login, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -42,17 +43,6 @@ const Login: React.FC = () => {
           </button>
         </form>
         {error && <p className="mt-4 text-red-500">{error}</p>}
-        {token && (
-          <div className="mt-4">
-            <p className="text-green-500">Token: {token}</p>
-            <button
-              onClick={logout}
-              className="w-full px-3 py-2 mt-4 text-white bg-red-500 rounded hover:bg-red-600 transition duration-200"
-            >
-              Logout
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

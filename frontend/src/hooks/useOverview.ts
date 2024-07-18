@@ -1,22 +1,18 @@
-// src/hooks/useOverview.ts
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export const useOverview = () => {
-  const [overviewType, setOverviewType] = useState("work");
-  const [timePeriod, setTimePeriod] = useState("year");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [timeMode, setTimeMode] = useState("last");
-  const [groupBy, setGroupBy] = useState("year");
-  const [thenBy, setThenBy] = useState("year");
-  const [sortAscending, setSortAscending] = useState(false);
-  const [noRecords, setNoRecords] = useState(false);
-  const [setDefaultQuery, setSetDefaultQuery] = useState(false);
-  const [custom, setCustom] = useState(false);
+const useOverview = () => {
+  const [overviewType, setOverviewType] = useState<string>();
+  const [timePeriod, setTimePeriod] = useState<string>();
+  const [timeMode, setTimeMode] = useState<string>();
+  const [groupBy, setGroupBy] = useState<string>();
+  const [thenBy, setThenBy] = useState<string>();
+  const [custom, setCustom] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<string>();
+  const [endDate, setEndDate] = useState<string>();
 
   useEffect(() => {
-    const fetchDefaultParameters = async () => {
+    const fetchDefaultParams = async () => {
       try {
         const response = await axios.get("/api/overview/get-default-overview");
         const defaultQueryString = response.data.queryString;
@@ -39,7 +35,7 @@ export const useOverview = () => {
       }
     };
 
-    fetchDefaultParameters();
+    fetchDefaultParams();
   }, []);
 
   return {
@@ -61,3 +57,5 @@ export const useOverview = () => {
     setEndDate,
   };
 };
+
+export default useOverview;

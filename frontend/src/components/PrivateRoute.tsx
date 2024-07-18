@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { authenticateUser } from "../services/api";
+import { authenticateUser } from "../services/apiService";
 
 interface PrivateRouteProps {
   element: React.ComponentType;

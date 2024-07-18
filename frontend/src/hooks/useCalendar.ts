@@ -17,15 +17,23 @@ const getISOWeekNumber = (date: Date): number => {
   );
 };
 
-// Custom hook to use the week number
-const useWeekNumber = (date: Date): number => {
-  const [weekNumber, setWeekNumber] = useState<number>(0);
+const useCalendar = (initialDate: Date) => {
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [weekNumber, setWeekNumber] = useState(getISOWeekNumber(initialDate));
 
   useEffect(() => {
-    setWeekNumber(getISOWeekNumber(date));
-  }, [date]);
+    setWeekNumber(getISOWeekNumber(selectedDate));
+  }, [selectedDate]);
 
-  return weekNumber;
+  const selectDate = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  return {
+    selectedDate,
+    weekNumber,
+    selectDate,
+  };
 };
 
-export default useWeekNumber;
+export default useCalendar;

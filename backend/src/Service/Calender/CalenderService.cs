@@ -114,6 +114,7 @@ namespace Infrastructure
             var latestTime = new TimeSpan(23, 59, 59, 999, 9999);
             var maxDateTime = date.Date + latestTime;
             var result = new DateTimeOffset(maxDateTime, date.Offset);
+            Console.WriteLine($"SetMaxTimeOnDate: Date was set to {result}");
 
             return result;
         }
@@ -123,6 +124,7 @@ namespace Infrastructure
             var earliestTime = new TimeSpan(0, 0, 0);
             var minDateTime = date.Date + earliestTime;
             var result = new DateTimeOffset(minDateTime, date.Offset);
+            Console.WriteLine($"SetMinTimeOnDate: Date was set to {result}");
 
             return result;
         }
@@ -237,14 +239,18 @@ namespace Infrastructure
             return new DateTimeOffset(startDate.Year, startDate.Month, 1, 0, 0, 0, startDate.Offset);
         }
 
-        public static DateTimeOffset FindEndDate(DateTimeOffset originalStartDate, DateTimeOffset startDate, string timePeriod, string timeMode)
+        public static DateTimeOffset FindEndDate(DateTimeOffset startDate, string timePeriod, string timeMode)
         {
             switch (timePeriod)
             {
                 case "day":
-                    if (timeMode == "last" || timeMode == "current" || timeMode == "rolling")
+                    if (timeMode == "last" || timeMode == "rolling")
                     {
                         return startDate;
+                    }
+                    else if (timeMode == "current")
+                    {
+                        return DateTimeOffset.Now;
                     }
                     else
                     {
@@ -257,7 +263,7 @@ namespace Infrastructure
                     }
                     else if (timeMode == "rolling")
                     {
-                        return originalStartDate;
+                        return DateTimeOffset.Now;
                     }
                     else
                     {
@@ -276,7 +282,7 @@ namespace Infrastructure
                     }
                     else if (timeMode == "rolling")
                     {
-                        return originalStartDate;
+                        return DateTimeOffset.Now;
                     }
                     else
                     {
@@ -289,7 +295,7 @@ namespace Infrastructure
                     }
                     else if (timeMode == "rolling")
                     {
-                        return originalStartDate;
+                        return DateTimeOffset.Now;
                     }
                     else
                     {

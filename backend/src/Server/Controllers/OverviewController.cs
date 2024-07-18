@@ -89,7 +89,7 @@ public class OverviewController : ControllerBase
 
     [HttpGet("work/get-overview")]
     public async Task<IActionResult> GetWorkOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords,
-        bool setDefault, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,
+        bool setDefault, DateTimeOffset? startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
         string thenBy) // employeeId will be null unless an admin using function to check an employees registrations
     {
         try
@@ -181,7 +181,7 @@ public class OverviewController : ControllerBase
     }
 
     [HttpGet("transportation/get-overview")]
-    public async Task<IActionResult> GetTransportationOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords, DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy,
+    public async Task<IActionResult> GetTransportationOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords, DateTimeOffset? startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy,
         string thenBy) // employeeId will be null unless an admin using function to check an employees registrations
     {
         try
@@ -252,7 +252,7 @@ public class OverviewController : ControllerBase
 
     [HttpGet("absence/get-overview")]
     public async Task<IActionResult> GetAbsenceOverview(Guid? employeeId, bool sortAsc, bool showUnitsWithNoRecords,
-        DateTime startDate, DateTime? endDate, string timePeriod, string timeMode, string groupBy, string thenBy, string absenceType)
+        DateTimeOffset? startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy, string absenceType)
     {
         try
         {

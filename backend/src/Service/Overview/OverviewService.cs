@@ -99,11 +99,11 @@ namespace Infrastructure
         }
 
         public async Task<OverviewResponse> WorkOverviewQuery(Guid userId, Guid employeeId, bool sortAsc, bool showUnitsWithNoRecords, bool setDefault,
-                DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy)
+                DateTimeOffset? customStartDate, DateTimeOffset? customEndDate, string timePeriod, string timeMode, string groupBy, string thenBy)
         {
             RegistrationType registrationType = RegistrationType.Work;
-            DateTimeOffset originalStartDate = startDate;
-            DateTimeOffset nonNullableEndDate = default;
+            DateTimeOffset startDate;
+            DateTimeOffset endDate;
             string queryString;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
@@ -117,56 +117,52 @@ namespace Infrastructure
                 employee = user;
             }
 
-
-            if (endDate is null)
+            if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date=null, end_date=null, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+            }
+            else if (customStartDate.HasValue && customEndDate.HasValue)
+            {
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date={customStartDate.Value.DateTime.ToShortDateString()}, end_date={customEndDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
             else
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                throw new InvalidOperationException($"customStartDate and customEndDate must both either be null or have value. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
             }
 
-            if (employee is null)
+            if (timeMode != "custom" && (customEndDate.HasValue || customStartDate.HasValue) || timePeriod != "custom" && (customEndDate.HasValue || customStartDate.HasValue))
             {
-                throw new ArgumentNullException(nameof(employee));
+                throw new InvalidOperationException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
             }
 
-            if (timeMode != "custom" && endDate.HasValue || timePeriod != "custom" && endDate.HasValue)
+            if (customEndDate is not null && customStartDate is not null && customEndDate < customStartDate)
             {
-                throw new ArgumentException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
+                throw new InvalidOperationException("Invalid customEndDate: customEndDate can't be earlier than customStartDate");
             }
 
-            if (endDate < startDate)
+            if (timePeriod != "custom" && timeMode != "custom" && customStartDate is null && customEndDate is null)
             {
-                throw new ArgumentException("Invalid endDate: endDate can't be earlier than startDate");
+                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
+                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(startDate, timePeriod, timeMode));
             }
-
-            if (timePeriod != "custom" && endDate is null)
+            else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(originalStartDate, startDate, timePeriod, timeMode));
-            }
-            else if (timePeriod == "custom" && endDate is null)
-            {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
+                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
                 endDate = CalenderService.SetMaxTimeOnDate(DateTimeOffset.Now);
             }
-
-            if (endDate.HasValue)
+            else
             {
-                nonNullableEndDate = endDate.Value;
+                throw new InvalidOperationException("You cannot use custom dates if custom timePeriod and timeMode are not chosen");
             }
 
             Console.WriteLine($"Start date: {startDate} End date: {endDate}");
 
-
-            if (!IsGroupByValid(groupBy, startDate, nonNullableEndDate))
+            if (!IsGroupByValid(groupBy, startDate, endDate))
             {
                 throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
             }
 
-            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
+            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, endDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
             int total = 0;
 
             foreach (var groupByObject in groupByObjects)
@@ -184,7 +180,6 @@ namespace Infrastructure
                 groupByObjects.Reverse();
             }
 
-
             string dateFormat = "ddd. dd/MM/yyyy";
 
             string timeModePeriodName;
@@ -198,13 +193,7 @@ namespace Infrastructure
                 timeModePeriodName = $"{timeMode.Substring(0, 1).ToUpper()}{timeMode.Substring(1)} {timePeriod.Substring(0, 1).ToUpper()}{timePeriod.Substring(1)}";
             }
 
-            string timespanEndDate = endDate.HasValue ? endDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture) : "DefaultEndDate";
-
-            if (endDate.HasValue)
-            {
-                timespanEndDate = endDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
-            }
-            string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {timespanEndDate}";
+            string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {endDate.ToString(dateFormat, CultureInfo.InvariantCulture)}";
 
             TimeModePeriodObject timeModePeriodObject = new(
                 timeModePeriodName,
@@ -280,11 +269,11 @@ namespace Infrastructure
         }
 
         public async Task<OverviewResponse> TransportationOverviewQuery(Guid userId, Guid employeeId, bool sortAsc, bool showUnitsWithNoRecords,
-               DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy)
+               DateTimeOffset? customStartDate, DateTimeOffset? customEndDate, string timePeriod, string timeMode, string groupBy, string thenBy)
         {
             RegistrationType registrationType = RegistrationType.Transportation;
-            DateTimeOffset originalStartDate = startDate;
-            DateTimeOffset nonNullableEndDate = default;
+            DateTimeOffset startDate;
+            DateTimeOffset endDate;
             string queryString;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
@@ -298,57 +287,52 @@ namespace Infrastructure
                 employee = user;
             }
 
-
-            if (endDate is null)
+            if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date=null, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+            }
+            else if (customStartDate.HasValue && customEndDate.HasValue)
+            {
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={customStartDate.Value.DateTime.ToShortDateString()}, end_date={customEndDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
             else
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                throw new InvalidOperationException($"customStartDate and customEndDate must both either be null or have value. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
             }
 
-            if (employee is null)
+            if (timeMode != "custom" && (customEndDate.HasValue || customStartDate.HasValue) || timePeriod != "custom" && (customEndDate.HasValue || customStartDate.HasValue))
             {
-                throw new ArgumentNullException(nameof(employee));
+                throw new InvalidOperationException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
             }
 
-            if (timeMode != "custom" && endDate.HasValue || timePeriod != "custom" && endDate.HasValue)
+            if (customEndDate is not null && customStartDate is not null && customEndDate < customStartDate)
             {
-                throw new ArgumentException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
+                throw new InvalidOperationException("Invalid customEndDate: customEndDate can't be earlier than customStartDate");
             }
 
-            if (endDate < startDate)
+            if (timePeriod != "custom" && timeMode != "custom" && customStartDate is null && customEndDate is null)
             {
-                throw new ArgumentException("Invalid endDate: endDate can't be earlier than startDate");
+                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
+                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(startDate, timePeriod, timeMode));
             }
-
-            if (timePeriod != "custom" && endDate is null)
+            else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(originalStartDate, startDate, timePeriod, timeMode));
-            }
-            else if (timePeriod == "custom" && endDate is null)
-            {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
+                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
                 endDate = CalenderService.SetMaxTimeOnDate(DateTimeOffset.Now);
             }
-
-
-            if (endDate.HasValue)
+            else
             {
-                nonNullableEndDate = endDate.Value;
+                throw new InvalidOperationException("You cannot use custom dates if custom timePeriod and timeMode are not chosen");
             }
 
             Console.WriteLine($"Start date: {startDate} End date: {endDate}");
 
-
-            if (!IsGroupByValid(groupBy, startDate, nonNullableEndDate))
+            if (!IsGroupByValid(groupBy, startDate, endDate))
             {
-                throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
+                throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {customStartDate} endDate: {endDate}");
             }
 
-            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
+            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, endDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
             int total = 0;
 
             foreach (var groupByObject in groupByObjects)
@@ -366,7 +350,6 @@ namespace Infrastructure
                 groupByObjects.Reverse();
             }
 
-
             string dateFormat = "ddd. dd/MM/yyyy";
 
             string timeModePeriodName;
@@ -380,13 +363,7 @@ namespace Infrastructure
                 timeModePeriodName = $"{timeMode.Substring(0, 1).ToUpper()}{timeMode.Substring(1)} {timePeriod.Substring(0, 1).ToUpper()}{timePeriod.Substring(1)}";
             }
 
-            string timespanEndDate = endDate.HasValue ? endDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture) : "DefaultEndDate";
-
-            if (endDate.HasValue)
-            {
-                timespanEndDate = endDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
-            }
-            string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {timespanEndDate}";
+            string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {endDate.ToString(dateFormat, CultureInfo.InvariantCulture)}";
 
             TimeModePeriodObject timeModePeriodObject = new(
                 timeModePeriodName,
@@ -438,7 +415,7 @@ namespace Infrastructure
         }
 
         public async Task<OverviewResponse> AbsenceOverviewQuery(Guid userId, Guid employeeId, bool sortAsc, bool showUnitsWithNoRecords,
-                DateTimeOffset startDate, DateTimeOffset? endDate, string timePeriod, string timeMode, string groupBy, string thenBy, string absenceType)
+                DateTimeOffset? customStartDate, DateTimeOffset? customEndDate, string timePeriod, string timeMode, string groupBy, string thenBy, string absenceType)
         {
             RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(absenceType);
 
@@ -447,8 +424,8 @@ namespace Infrastructure
                 throw new InvalidOperationException($"{registrationType} is not among the absence types. These are '{RegistrationType.Leave}', '{RegistrationType.Sickness} and {RegistrationType.Vacation}");
             }
 
-            DateTimeOffset originalStartDate = startDate;
-            DateTimeOffset nonNullableEndDate = default;
+            DateTimeOffset startDate;
+            DateTimeOffset endDate;
             string queryString;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
@@ -462,60 +439,52 @@ namespace Infrastructure
                 employee = user;
             }
 
-            if (endDate is null)
+            if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date={endDate}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}, absence_type={absenceType}";
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date=null, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}, absence_type={absenceType}";
+            }
+            else if (customStartDate.HasValue && customEndDate.HasValue)
+            {
+                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={customStartDate.Value.DateTime.ToShortDateString()}, end_date={customEndDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
             }
             else
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={startDate.DateTime.ToShortDateString()}, end_date={endDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                throw new InvalidOperationException($"customStartDate and customEndDate must both either be null or have value. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
             }
 
-            if (employee is null)
+            if (timeMode != "custom" && (customEndDate.HasValue || customStartDate.HasValue) || timePeriod != "custom" && (customEndDate.HasValue || customStartDate.HasValue))
             {
-                throw new ArgumentNullException(nameof(employee));
+                throw new InvalidOperationException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
             }
 
-            if (timeMode != "custom" && endDate.HasValue || timePeriod != "custom" && endDate.HasValue)
+            if (customEndDate is not null && customStartDate is not null && customEndDate < customStartDate)
             {
-                throw new ArgumentException("Invalid input combination: timeMode and timePeriod have to be 'custom' if you choose an endDate or endDate has to be left blank to see the chosen timeMode/timePeriod combination.");
+                throw new InvalidOperationException("Invalid customEndDate: customEndDate can't be earlier than customStartDate");
             }
 
-            if (endDate < startDate)
+            if (timePeriod != "custom" && timeMode != "custom" && customStartDate is null && customEndDate is null)
             {
-                throw new ArgumentException("Invalid endDate: endDate can't be earlier than startDate");
+                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
+                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(startDate, timePeriod, timeMode));
             }
-
-            if (groupBy == "client" || thenBy == "client")
+            else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                throw new ArgumentException($"You cannot categorize your absence overview in 'clients'. GroupBy was {groupBy} and ThenBy was {thenBy}");
-            }
-
-            if (timePeriod != "custom" && endDate is null)
-            {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(originalStartDate, startDate, timePeriod, timeMode));
-            }
-            else if (timePeriod == "custom" && endDate is null)
-            {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(startDate, timePeriod, timeMode));
+                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
                 endDate = CalenderService.SetMaxTimeOnDate(DateTimeOffset.Now);
             }
-
-            if (endDate.HasValue)
+            else
             {
-                nonNullableEndDate = endDate.Value;
+                throw new InvalidOperationException("You cannot use custom dates if custom timePeriod and timeMode are not chosen");
             }
 
             Console.WriteLine($"Start date: {startDate} End date: {endDate}");
 
-
-            if (!IsGroupByValid(groupBy, startDate, nonNullableEndDate))
+            if (!IsGroupByValid(groupBy, startDate, endDate))
             {
-                throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {startDate} endDate: {endDate}");
+                throw new ArgumentException($"Invalid groupby option selected: A time period can only be grouped into period units that it contains more than one of. startDate: {customStartDate} endDate: {customEndDate}");
             }
 
-            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, nonNullableEndDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
+            var groupByObjects = await GetGroupByObjects(groupBy, employee, startDate, endDate, showUnitsWithNoRecords, registrationType, thenBy, timePeriod);
             int total = 0;
 
             foreach (var groupByObject in groupByObjects)
@@ -547,13 +516,7 @@ namespace Infrastructure
                 timeModePeriodName = $"{timeMode.Substring(0, 1).ToUpper()}{timeMode.Substring(1)} {timePeriod.Substring(0, 1).ToUpper()}{timePeriod.Substring(1)}";
             }
 
-            string timespanEndDate = endDate.HasValue ? endDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture) : "DefaultEndDate";
-
-            if (endDate.HasValue)
-            {
-                timespanEndDate = endDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
-            }
-            string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {timespanEndDate}";
+            string timespan = $"{startDate.ToString(dateFormat, CultureInfo.InvariantCulture)} - {endDate.ToString(dateFormat, CultureInfo.InvariantCulture)}";
 
             TimeModePeriodObject timeModePeriodObject = new(
                 timeModePeriodName,

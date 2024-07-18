@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import OverviewPage from "./pages/OverviewPage";
 import PrivateRoute from "./components/PrivateRoute";
 import { useAuth } from "./hooks/useAuth";
 
@@ -14,6 +15,10 @@ const App: React.FC = () => {
       <Route
         path="/dashboard"
         element={<PrivateRoute element={DashboardPage} />}
+      />
+      <Route
+        path="/overview"
+        element={<PrivateRoute element={OverviewPage} />}
       />
       <Route
         path="/"

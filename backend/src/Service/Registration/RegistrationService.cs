@@ -8,9 +8,9 @@ namespace Infrastructure
     public class RegistrationService : IRegistrationService
     {
         private readonly LogpunchDbContext _dbContext;
-        private readonly ICalenderService _calenderService;
+        private readonly ICalendarService _calenderService;
 
-        public RegistrationService(LogpunchDbContext dbContext, ICalenderService calenderService)
+        public RegistrationService(LogpunchDbContext dbContext, ICalendarService calenderService)
         {
             _dbContext = dbContext;
             _calenderService = calenderService;

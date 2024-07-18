@@ -16,13 +16,13 @@ using System.Globalization;
 
 namespace Infrastructure
 {
-    public class CalenderService : ICalenderService
+    public class CalendarService : ICalendarService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiBaseUrl = "https://api.sallinggroup.com";
         private readonly string _bearerToken = "c0825d79-42ef-418e-b224-931d714be77b";
 
-        public CalenderService(HttpClient httpClient)
+        public CalendarService(HttpClient httpClient)
         {
             _httpClient = httpClient;
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _bearerToken);
@@ -111,7 +111,8 @@ namespace Infrastructure
 
         public static DateTimeOffset SetMaxTimeOnDate(DateTimeOffset date)
         {
-            var latestTime = new TimeSpan(23, 59, 59, 999, 9999);
+            Console.WriteLine($"SetMaxTimeOnDate: Date i got was {date}");
+            var latestTime = new TimeSpan(0, 23, 59, 59, 99, 999);
             var maxDateTime = date.Date + latestTime;
             var result = new DateTimeOffset(maxDateTime, date.Offset);
             Console.WriteLine($"SetMaxTimeOnDate: Date was set to {result}");
@@ -121,7 +122,8 @@ namespace Infrastructure
 
         public static DateTimeOffset SetMinTimeOnDate(DateTimeOffset date)
         {
-            var earliestTime = new TimeSpan(0, 0, 0);
+            Console.WriteLine($"SetMinTimeOnDate: Date i got was {date}");
+            var earliestTime = new TimeSpan(0, 0, 0, 0, 0, 0);
             var minDateTime = date.Date + earliestTime;
             var result = new DateTimeOffset(minDateTime, date.Offset);
             Console.WriteLine($"SetMinTimeOnDate: Date was set to {result}");
@@ -295,6 +297,7 @@ namespace Infrastructure
                     }
                     else if (timeMode == "rolling")
                     {
+                        Console.WriteLine("Local time right now: " + DateTimeOffset.Now);
                         return DateTimeOffset.Now;
                     }
                     else
@@ -333,6 +336,31 @@ namespace Infrastructure
             return weekNumber;
         }
 
+        public static List<string> GetCompleteWeeksList(DateTimeOffset startDate, DateTimeOffset endDate)
+        {
+            var weeks = new List<string>();
+            var current = startDate;
+
+            while (current <= endDate)
+            {
+                var week = $"Week {CalendarService.GetDanishWeekNumber(current)}, {current.Year}";
+                if (!weeks.Contains(week))
+                {
+                    weeks.Add(week);
+                }
+                current = current.AddDays(7);
+            }
+
+            return weeks;
+        }
+
+        public static (int Week, int Year) GetWeekYearTuple(string weekString)
+        {
+            var parts = weekString.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+            int week = int.Parse(parts[1]);
+            int year = int.Parse(parts[2]);
+            return (week, year);
+        }
         public static readonly List<string> TimeUnitOrder = ["day", "week", "month", "year"];
 
         // Legacy methods

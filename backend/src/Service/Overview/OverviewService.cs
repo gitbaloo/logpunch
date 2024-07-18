@@ -102,8 +102,8 @@ namespace Infrastructure
                 DateTimeOffset? customStartDate, DateTimeOffset? customEndDate, string timePeriod, string timeMode, string groupBy, string thenBy)
         {
             RegistrationType registrationType = RegistrationType.Work;
-            DateTimeOffset startDate;
-            DateTimeOffset endDate;
+            DateTimeOffset startDate = new();
+            DateTimeOffset endDate = new();
             string queryString;
             var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId) ?? throw new InvalidOperationException("No user with given ID exists");
             LogpunchUser employee;
@@ -140,15 +140,18 @@ namespace Infrastructure
                 throw new InvalidOperationException("Invalid customEndDate: customEndDate can't be earlier than customStartDate");
             }
 
+            Console.WriteLine("startDate before: " + startDate);
+            Console.WriteLine("endDate before: " + endDate);
+
             if (timePeriod != "custom" && timeMode != "custom" && customStartDate is null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(startDate, timePeriod, timeMode));
+                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
+                endDate = CalendarService.SetMaxTimeOnDate(CalendarService.FindEndDate(startDate, timePeriod, timeMode));
             }
             else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(DateTimeOffset.Now);
+                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
+                endDate = CalendarService.SetMaxTimeOnDate(DateTimeOffset.Now);
             }
             else
             {
@@ -312,13 +315,13 @@ namespace Infrastructure
 
             if (timePeriod != "custom" && timeMode != "custom" && customStartDate is null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(startDate, timePeriod, timeMode));
+                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
+                endDate = CalendarService.SetMaxTimeOnDate(CalendarService.FindEndDate(startDate, timePeriod, timeMode));
             }
             else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(DateTimeOffset.Now);
+                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
+                endDate = CalendarService.SetMaxTimeOnDate(DateTimeOffset.Now);
             }
             else
             {
@@ -464,13 +467,13 @@ namespace Infrastructure
 
             if (timePeriod != "custom" && timeMode != "custom" && customStartDate is null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(CalenderService.FindEndDate(startDate, timePeriod, timeMode));
+                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(DateTimeOffset.Now, timePeriod, timeMode));
+                endDate = CalendarService.SetMaxTimeOnDate(CalendarService.FindEndDate(startDate, timePeriod, timeMode));
             }
             else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalenderService.SetMinTimeOnDate(CalenderService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
-                endDate = CalenderService.SetMaxTimeOnDate(DateTimeOffset.Now);
+                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
+                endDate = CalendarService.SetMaxTimeOnDate(DateTimeOffset.Now);
             }
             else
             {
@@ -532,13 +535,13 @@ namespace Infrastructure
 
         private async Task<List<GroupByObject>> GetGroupByObjects(string groupBy, LogpunchUser user, DateTimeOffset startDate, DateTimeOffset endDate, bool showUnitsWithNoRecords, RegistrationType registrationType, string thenBy, string timePeriod)
         {
-            if (CalenderService.TimeUnitOrder.Contains(groupBy) && CalenderService.TimeUnitOrder.Contains(timePeriod))
+            if (CalendarService.TimeUnitOrder.Contains(groupBy) && CalendarService.TimeUnitOrder.Contains(timePeriod))
             {
-                if (CalenderService.TimeUnitOrder.IndexOf(groupBy) >= CalenderService.TimeUnitOrder.IndexOf(timePeriod))
+                if (CalendarService.TimeUnitOrder.IndexOf(groupBy) >= CalendarService.TimeUnitOrder.IndexOf(timePeriod))
                 {
                     // If groupBy is equal or larger than timePeriod, adjust groupBy to be one level smaller than timePeriod
-                    int timePeriodIndex = CalenderService.TimeUnitOrder.IndexOf(timePeriod);
-                    groupBy = timePeriodIndex > 0 ? CalenderService.TimeUnitOrder[timePeriodIndex - 1] : timePeriod;
+                    int timePeriodIndex = CalendarService.TimeUnitOrder.IndexOf(timePeriod);
+                    groupBy = timePeriodIndex > 0 ? CalendarService.TimeUnitOrder[timePeriodIndex - 1] : timePeriod;
                 }
             }
 
@@ -611,13 +614,13 @@ namespace Infrastructure
         private List<ThenByObject> GetThenByObjects(IEnumerable<LogpunchRegistrationDto> group, string thenBy, string groupBy)
         {
             // Check if thenBy is a valid time unit and is larger or equal to groupBy
-            if (CalenderService.TimeUnitOrder.Contains(thenBy) && CalenderService.TimeUnitOrder.Contains(groupBy))
+            if (CalendarService.TimeUnitOrder.Contains(thenBy) && CalendarService.TimeUnitOrder.Contains(groupBy))
             {
-                if (CalenderService.TimeUnitOrder.IndexOf(thenBy) >= CalenderService.TimeUnitOrder.IndexOf(groupBy))
+                if (CalendarService.TimeUnitOrder.IndexOf(thenBy) >= CalendarService.TimeUnitOrder.IndexOf(groupBy))
                 {
                     // If thenBy is equal or larger than groupBy, adjust thenBy to be one level smaller than groupBy
-                    int groupByIndex = CalenderService.TimeUnitOrder.IndexOf(groupBy);
-                    thenBy = groupByIndex > 0 ? CalenderService.TimeUnitOrder[groupByIndex - 1] : groupBy;
+                    int groupByIndex = CalendarService.TimeUnitOrder.IndexOf(groupBy);
+                    thenBy = groupByIndex > 0 ? CalendarService.TimeUnitOrder[groupByIndex - 1] : groupBy;
                 }
             }
 
@@ -628,7 +631,7 @@ namespace Infrastructure
                     .Select(g => new ThenByObject(g.Key.ToString("dd/MM/yyyy"), g.Sum(i => i.Amount ?? 0)))
                     .ToList(),
                 "week" => group
-                    .GroupBy(g => new { g.Start.Year, Week = CalenderService.GetDanishWeekNumber(g.Start) })
+                    .GroupBy(g => new { g.Start.Year, Week = CalendarService.GetDanishWeekNumber(g.Start) })
                     .Select(g => new ThenByObject($"Week {g.Key.Week}, {g.Key.Year}", g.Sum(i => i.Amount ?? 0)))
                     .ToList(),
                 "month" => group
@@ -653,7 +656,7 @@ namespace Infrastructure
 
         private List<GroupByObject> GroupByDay(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
-            var result = correctedData
+            var days = correctedData
                 .GroupBy(r => r.Start.Date)
                 .Select(group => new GroupByObject(
                     group.Key.ToString("dd/MM/yyyy"),
@@ -668,21 +671,21 @@ namespace Infrastructure
                     .Select(offset => startDate.AddDays(offset))
                     .Select(date => date.ToString("dd/MM/yyyy"));
 
-                var missingDates = allDates.Except(result.Select(r => r.Name));
+                var missingDates = allDates.Except(days.Select(r => r.Name));
 
                 var missingGroupByObjects = missingDates.Select(date => new GroupByObject(date, 0, new List<ThenByObject>()));
 
-                result.AddRange(missingGroupByObjects);
-                result = result.OrderBy(r => DateTimeOffset.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
+                days.AddRange(missingGroupByObjects);
+                days = days.OrderBy(r => DateTimeOffset.ParseExact(r.Name, "dd/MM/yyyy", CultureInfo.InvariantCulture)).ToList();
             }
 
-            return result;
+            return days;
         }
 
         private List<GroupByObject> GroupByWeek(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
-            var result = correctedData
-                .GroupBy(r => new { r.Start.Year, Week = CalenderService.GetDanishWeekNumber(r.Start) })
+            var weeks = correctedData
+                .GroupBy(r => new { r.Start.Year, Week = CalendarService.GetDanishWeekNumber(r.Start) })
                 .Select(g => new GroupByObject(
                     $"Week {g.Key.Week}, {g.Key.Year}",
                     g.Sum(item => item.Amount ?? 0),
@@ -692,28 +695,25 @@ namespace Infrastructure
 
             if (showUnitsWithNoRecords)
             {
-                var startWeek = CalenderService.GetDanishWeekNumber(startDate);
-                var endWeek = CalenderService.GetDanishWeekNumber(endDate);
-                var allWeeks = Enumerable.Range(0, endDate.Subtract(startDate).Days / 7 + 1)
-                    .Select(offset => startDate.AddDays(offset * 7))
-                    .Select(date => new { date.Year, Week = CalenderService.GetDanishWeekNumber(date) })
-                    .Distinct()
-                    .Select(week => $"Week {week.Week}, {week.Year}");
+                var completeWeeksList = CalendarService.GetCompleteWeeksList(startDate, endDate);
 
-                var missingWeeks = allWeeks.Except(result.Select(r => r.Name));
+                foreach (var week in completeWeeksList)
+                {
+                    if (!weeks.Any(w => w.Name == week))
+                    {
+                        weeks.Add(new GroupByObject(week, 0, new List<ThenByObject>()));
+                    }
+                }
 
-                var missingGroupByObjects = missingWeeks.Select(week => new GroupByObject(week, 0, new List<ThenByObject>()));
-
-                result.AddRange(missingGroupByObjects);
-                result = result.OrderBy(r => DateTime.ParseExact(r.Name.Split(',')[1].Trim() + "-W" + r.Name.Split(' ')[1], "yyyy-Www", CultureInfo.InvariantCulture)).ToList();
+                weeks = weeks.OrderBy(w => CalendarService.GetWeekYearTuple(w.Name)).ToList();
             }
 
-            return result;
+            return weeks;
         }
 
         private List<GroupByObject> GroupByMonth(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
-            var result = correctedData
+            var months = correctedData
                 .GroupBy(r => new { r.Start.Year, r.Start.Month })
                 .Select(g => new GroupByObject(
                     CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month) + $" {g.Key.Year}",
@@ -728,20 +728,20 @@ namespace Infrastructure
                     .Select(offset => startDate.AddMonths(offset))
                     .Select(date => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(date.Month) + $" {date.Year}");
 
-                var missingMonths = allMonths.Except(result.Select(r => r.Name));
+                var missingMonths = allMonths.Except(months.Select(r => r.Name));
 
                 var missingGroupByObjects = missingMonths.Select(month => new GroupByObject(month, 0, new List<ThenByObject>()));
 
-                result.AddRange(missingGroupByObjects);
-                result = result.OrderBy(r => DateTime.ParseExact(r.Name, "MMMM yyyy", CultureInfo.InvariantCulture)).ToList();
+                months.AddRange(missingGroupByObjects);
+                months = months.OrderBy(r => DateTime.ParseExact(r.Name, "MMMM yyyy", CultureInfo.InvariantCulture)).ToList();
             }
 
-            return result;
+            return months;
         }
 
         private List<GroupByObject> GroupByYear(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
         {
-            var result = correctedData
+            var years = correctedData
                 .GroupBy(r => new { r.Start.Year })
                 .Select(g => new GroupByObject(
                     g.Key.Year.ToString(),
@@ -755,15 +755,15 @@ namespace Infrastructure
                 var allYears = Enumerable.Range(startDate.Year, endDate.Year - startDate.Year + 1)
                     .Select(year => year.ToString());
 
-                var missingYears = allYears.Except(result.Select(r => r.Name));
+                var missingYears = allYears.Except(years.Select(r => r.Name));
 
                 var missingGroupByObjects = missingYears.Select(year => new GroupByObject(year, 0, new List<ThenByObject>()));
 
-                result.AddRange(missingGroupByObjects);
-                result = result.OrderBy(r => int.Parse(r.Name)).ToList();
+                years.AddRange(missingGroupByObjects);
+                years = years.OrderBy(r => int.Parse(r.Name)).ToList();
             }
 
-            return result;
+            return years;
         }
 
         private List<GroupByObject> GroupByClient(List<LogpunchRegistrationDto> correctedData, bool showUnitsWithNoRecords, List<Guid> employeeClientRelationIds, DateTimeOffset startDate, DateTimeOffset endDate, string thenBy)
@@ -778,7 +778,7 @@ namespace Infrastructure
                 })
                 .ToList();
 
-            var result = groupedData
+            var clients = groupedData
                 .Select(group => new GroupByObject(
                     GetClientName(group.ClientId),
                     group.TotalAmount,
@@ -792,15 +792,15 @@ namespace Infrastructure
                     .Select(c => c.Name ?? "No Client")
                     .ToList();
 
-                var missingClients = allClients.Except(result.Select(r => r.Name));
+                var missingClients = allClients.Except(clients.Select(r => r.Name));
 
                 var missingGroupByObjects = missingClients.Select(client => new GroupByObject(client, 0, new List<ThenByObject>()));
 
-                result.AddRange(missingGroupByObjects);
-                result = result.OrderBy(r => r.Name).ToList();
+                clients.AddRange(missingGroupByObjects);
+                clients = clients.OrderBy(r => r.Name).ToList();
             }
 
-            return result;
+            return clients;
         }
 
         private static bool IsGroupByValid(string groupBy, DateTimeOffset startDate, DateTimeOffset endDate)
@@ -810,7 +810,7 @@ namespace Infrastructure
                 case "day":
                     return true;
                 case "week":
-                    if (CalenderService.GetDanishWeekNumber(startDate) != CalenderService.GetDanishWeekNumber(endDate))
+                    if (CalendarService.GetDanishWeekNumber(startDate) != CalendarService.GetDanishWeekNumber(endDate))
                     {
                         return true;
                     }
@@ -818,7 +818,7 @@ namespace Infrastructure
                     {
                         return true;
                     }
-                    else if (startDate.Month != endDate.Month && startDate.Year == endDate.Year && CalenderService.GetDanishWeekNumber(startDate) == CalenderService.GetDanishWeekNumber(endDate))
+                    else if (startDate.Month != endDate.Month && startDate.Year == endDate.Year && CalendarService.GetDanishWeekNumber(startDate) == CalendarService.GetDanishWeekNumber(endDate))
                     {
                         return true;
                     }

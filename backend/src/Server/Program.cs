@@ -20,7 +20,7 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IOverviewService, OverviewService>();
-builder.Services.AddScoped<ICalenderService, CalenderService>();
+builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddHttpClient();
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>

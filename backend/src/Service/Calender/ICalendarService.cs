@@ -6,7 +6,7 @@ using Domain;
 
 namespace Infrastructure
 {
-    public interface ICalenderService
+    public interface ICalendarService
     {
         Task<int> HolidaysAndWeekendDatesInTimeSpan(DateTime startDate, DateTime endDate);
         Task<ICollection<Holiday>?> GetHolidays(DateTime startDate, DateTime endDate);

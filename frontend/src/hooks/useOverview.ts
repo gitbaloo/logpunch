@@ -5,12 +5,15 @@ import axios from "axios";
 export const useOverview = () => {
   const [overviewType, setOverviewType] = useState("work");
   const [timePeriod, setTimePeriod] = useState("year");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [timeMode, setTimeMode] = useState("last");
   const [groupBy, setGroupBy] = useState("year");
   const [thenBy, setThenBy] = useState("year");
+  const [sortAscending, setSortAscending] = useState(false);
+  const [noRecords, setNoRecords] = useState(false);
+  const [setDefaultQuery, setSetDefaultQuery] = useState(false);
   const [custom, setCustom] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     const fetchDefaultParameters = async () => {

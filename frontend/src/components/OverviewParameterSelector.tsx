@@ -1,28 +1,59 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useOverview } from "../hooks/useOverview";
-import useWeekNumber from "../hooks/useWeekNumber";
 import { isAfter, isBefore, parseISO, formatISO } from "date-fns";
-import TopBar from "../components/TopBar";
+import useWeekNumber from "../hooks/useWeekNumber";
 
-const OverviewPage: React.FC = () => {
-  const {
-    overviewType,
-    setOverviewType,
-    timePeriod,
-    setTimePeriod,
-    timeMode,
-    setTimeMode,
-    groupBy,
-    setGroupBy,
-    thenBy,
-    setThenBy,
-    custom,
-    setCustom,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-  } = useOverview();
+interface OverviewParameterSelectorProps {
+  overviewType: string;
+  setOverviewType: (value: string) => void;
+  timePeriod: string;
+  setTimePeriod: (value: string) => void;
+  startDate: Date;
+  setStartDate: (value: Date) => void;
+  endDate: Date;
+  setEndDate: (value: Date) => void;
+  timeMode: string;
+  setTimeMode: (value: string) => void;
+  groupBy: string;
+  setGroupBy: (value: string) => void;
+  thenBy: string;
+  setThenBy: (value: string) => void;
+  sortAscending: boolean;
+  setSortAscending: (value: boolean) => void;
+  noRecords: boolean;
+  setNoRecords: (value: boolean) => void;
+  setDefaultQuery: boolean;
+  setSetDefaultQuery: (value: boolean) => void;
+  custom: (value: boolean) => void;
+  setCustom: (value: boolean) => void;
+  groupByOptions: string[];
+  thenByOptions: string[];
+}
+
+const OverviewParameterSelector: React.FC<OverviewParameterSelectorProps> = ({
+  overviewType,
+  setOverviewType,
+  timePeriod,
+  setTimePeriod,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  timeMode,
+  setTimeMode,
+  groupBy,
+  setGroupBy,
+  thenBy,
+  setThenBy,
+  sortAscending,
+  setSortAscending,
+  noRecords,
+  setNoRecords,
+  setDefaultQuery: defaultQuery,
+  setSetDefaultQuery: setDefaultQuery,
+  custom,
+  setCustom,
+}) = useOverview();
 
   const today = new Date();
   const startWeekNumber = useWeekNumber(new Date(startDate));
@@ -88,7 +119,7 @@ const OverviewPage: React.FC = () => {
 
   const getGroupByOptions = () => {
     let options: string[] = [];
-    if (custom) {
+    if (timePeriod == "custom") {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
@@ -162,7 +193,6 @@ const OverviewPage: React.FC = () => {
   }, [
     timePeriod,
     groupBy,
-    custom,
     startDate,
     endDate,
     groupByOptions,
@@ -179,7 +209,6 @@ const OverviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <TopBar />
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
         <h1 className="text-4xl font-bold mb-8">Overview</h1>
         <form className="bg-white shadow-md rounded-lg p-8 w-full max-w-2xl">
@@ -321,4 +350,4 @@ const OverviewPage: React.FC = () => {
   );
 };
 
-export default OverviewPage;
+export default OverviewParameterSelector;

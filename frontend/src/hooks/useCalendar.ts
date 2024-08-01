@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { DateTime } from "luxon";
 
 // Function to get the ISO 8601 week number
 const getISOWeekNumber = (date: Date): number => {
@@ -17,23 +18,20 @@ const getISOWeekNumber = (date: Date): number => {
   );
 };
 
-const useCalendar = (initialDate: Date) => {
-  const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [weekNumber, setWeekNumber] = useState(getISOWeekNumber(initialDate));
+const useCalendar = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [weekNumber, setWeekNumber] = useState(getISOWeekNumber(currentDate));
+  const [dateTimeOffset, setDateTimeOffset] = useState<string>("");
 
   useEffect(() => {
-    setWeekNumber(getISOWeekNumber(selectedDate));
-  }, [selectedDate]);
+    const now = new Date();
+    setCurrentDate(now);
+    setWeekNumber(getISOWeekNumber(now));
+    const isoString = DateTime.fromJSDate(now).toISO();
+    setDateTimeOffset(isoString || "");
+  }, []);
 
-  const selectDate = (date: Date) => {
-    setSelectedDate(date);
-  };
-
-  return {
-    selectedDate,
-    weekNumber,
-    selectDate,
-  };
+  return { currentDate, weekNumber, dateTimeOffset };
 };
 
 export default useCalendar;

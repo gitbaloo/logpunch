@@ -202,7 +202,6 @@ namespace Logpunch.Controllers
             }
         }
 
-
         [HttpPatch("confirmation")]
         public async Task<IActionResult> EmployeeConfirmationRegistration([FromBody] EmployeeConfirmationRegistrationRequest request)
         {
@@ -234,7 +233,7 @@ namespace Logpunch.Controllers
                 var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
                 var user = await _loginService.ValidateToken(token);
 
-                var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(user.Id, request.Start, request.End, request.ClientId, request.FirstComment, request.SecondComment, request.CorrectionOfId);
+                var correctionRegistration = await _registrationService.EmployeeCorrectionRegistration(user.Id, request.ClientId, request.Type, request.Start, request.End, request.FirstComment, request.SecondComment, request.CorrectionOfId);
 
                 if (correctionRegistration is null)
                 {

@@ -19,9 +19,7 @@ public class OverviewController : ControllerBase
         _loginService = loginService;
     }
 
-    // Work registrations
-
-    [HttpGet("work/get-ongoing")]
+    [HttpGet("get-ongoing")]
     public async Task<IActionResult> GetOngoingRegistration(Guid? employeeId)
     {
         try
@@ -53,6 +51,8 @@ public class OverviewController : ControllerBase
             return BadRequest(e.Message);
         }
     }
+
+    // Work registrations
 
     [HttpGet("work/get-unsettled")]
     public async Task<IActionResult> GetUnsettledWorkRegistrations(Guid? employeeId) // employeeId will be null unless an admin using function to check an employees registrations

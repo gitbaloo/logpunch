@@ -331,9 +331,15 @@ namespace Infrastructure
             return registrationDto;
         }
 
-        public async Task<LogpunchRegistrationDto> EmployeeCorrectionRegistration(Guid userId, DateTimeOffset start, DateTimeOffset end, Guid? clientId, string? firstComment, string? secondComment, Guid correctionOfId)
+        public async Task<LogpunchRegistrationDto> EmployeeCorrectionRegistration(Guid userId, Guid? clientId, string type, DateTimeOffset start, DateTimeOffset end, string? firstComment, string? secondComment, Guid correctionOfId)
         {
-            RegistrationType registrationType = RegistrationType.Work;
+            RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(type);
+
+            if (registrationType != RegistrationType.Work || registrationType != RegistrationType.Transportation)
+            {
+                throw new InvalidOperationException("Employees can only make corrections of 'Work' and 'Transport' registrations");
+            }
+
             RegistrationStatus registrationStatus = RegistrationStatus.Open;
             var creationTime = DateTimeOffset.UtcNow;
 

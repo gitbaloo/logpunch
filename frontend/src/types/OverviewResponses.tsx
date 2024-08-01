@@ -1,5 +1,3 @@
-// src/types/Response.ts
-
 interface TimeModePeriodObject {
   name: string;
   timespan: string;
@@ -21,7 +19,7 @@ interface TimePeriodObject {
   groupByObjects: GroupByObject[];
 }
 
-export interface OverviewResponse {
+export interface OverviewQueryResponse {
   type: string;
   queryString: string;
   timeModePeriodObject: TimeModePeriodObject;

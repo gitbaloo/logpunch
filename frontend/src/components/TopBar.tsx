@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
+import Calendar from "./Calendar";
 
 const TopBar: React.FC = () => {
   const { logout } = useAuth();
@@ -15,48 +16,43 @@ const TopBar: React.FC = () => {
 
   return (
     <div className="flex justify-between items-center p-4 bg-white shadow-md w-full">
-      <h1 className="text-2xl font-bold sm:block hidden">Logpunch</h1>
-      <div className="sm:flex hidden space-x-4">
-        <button
-          onClick={() => handleNavigate("/dashboard")}
-          className={`px-4 py-2 rounded ${
-            location.pathname === "/dashboard"
-              ? "bg-blue-600 text-white"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          Dashboard
-        </button>
-        <button
-          onClick={() => handleNavigate("/overview")}
-          className={`px-4 py-2 rounded ${
-            location.pathname === "/overview"
-              ? "bg-blue-600 text-white"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          Overview
-        </button>
-        <button
-          onClick={() => handleNavigate("/registration")}
-          className={`px-4 py-2 rounded ${
-            location.pathname === "/registration"
-              ? "bg-blue-600 text-white"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          Create Registration
-        </button>
-        <button
-          onClick={() => handleNavigate("/clients")}
-          className={`px-4 py-2 rounded ${
-            location.pathname === "/clients"
-              ? "bg-blue-600 text-white"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          Clients
-        </button>
+      <div className="flex items-center space-x-4">
+        <h1 className="text-2xl font-bold sm:block hidden">Logpunch</h1>
+        <Calendar />
+      </div>
+      <div className="flex-grow flex justify-center items-center">
+        <div className="sm:flex hidden items-center space-x-4">
+          <button
+            onClick={() => handleNavigate("/dashboard")}
+            className={`px-4 py-2 rounded ${
+              location.pathname === "/dashboard"
+                ? "bg-blue-800 text-white"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => handleNavigate("/overview")}
+            className={`px-4 py-2 rounded ${
+              location.pathname === "/overview"
+                ? "bg-blue-800 text-white"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+          >
+            History
+          </button>
+          <button
+            onClick={() => handleNavigate("/registration")}
+            className={`px-4 py-2 rounded ${
+              location.pathname === "/registration"
+                ? "bg-blue-800 text-white"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+          >
+            Registration
+          </button>
+        </div>
       </div>
       <button
         onClick={logout}
@@ -102,7 +98,7 @@ const TopBar: React.FC = () => {
             onClick={() => handleNavigate("/dashboard")}
             className={`block px-4 py-2 w-full text-left ${
               location.pathname === "/dashboard"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-800 text-white"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
           >
@@ -112,31 +108,21 @@ const TopBar: React.FC = () => {
             onClick={() => handleNavigate("/overview")}
             className={`block px-4 py-2 w-full text-left ${
               location.pathname === "/overview"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-800 text-white"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
           >
-            Overview
+            History
           </button>
           <button
             onClick={() => handleNavigate("/registration")}
             className={`block px-4 py-2 w-full text-left ${
               location.pathname === "/registration"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-800 text-white"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
           >
-            Create Registration
-          </button>
-          <button
-            onClick={() => handleNavigate("/clients")}
-            className={`block px-4 py-2 w-full text-left ${
-              location.pathname === "/clients"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-500 text-white hover:bg-blue-600"
-            }`}
-          >
-            Clients
+            Registration
           </button>
           <button
             onClick={logout}

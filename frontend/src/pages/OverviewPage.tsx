@@ -5,12 +5,12 @@ import Calendar from "../components/Calendar";
 import TopBar from "../components/TopBar";
 import QueryParamWindow from "../components/QueryParamWindow";
 import { QueryParam } from "../types/QueryParams";
-import { OverviewResponse } from "../types/OverviewResponse";
+import { OverviewQueryResponse } from "../types/OverviewResponses";
 import { fetchDefaultParams, fetchOverviewData } from "../services/apiService";
 
 const OverviewPage: React.FC = () => {
   const [params, setParams] = useState<QueryParam | null>(null);
-  const [data, setData] = useState<OverviewResponse | null>(null);
+  const [data, setData] = useState<OverviewQueryResponse | null>(null);
   const [showParamWindow, setShowParamWindow] = useState(false);
 
   useEffect(() => {

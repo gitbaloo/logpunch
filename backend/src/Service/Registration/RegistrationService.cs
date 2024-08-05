@@ -335,7 +335,7 @@ namespace Infrastructure
         {
             RegistrationType registrationType = RegistrationTypeConverter.ConvertStringToEnum(type);
 
-            if (registrationType != RegistrationType.Work || registrationType != RegistrationType.Transportation)
+            if (registrationType != RegistrationType.Work && registrationType != RegistrationType.Transportation)
             {
                 throw new InvalidOperationException("Employees can only make corrections of 'Work' and 'Transport' registrations");
             }

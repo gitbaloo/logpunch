@@ -14,19 +14,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb1")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetOngoingRegistration(userId, userId);
+        var result = await service.GetOngoingRegistration(user.Id, user.Id);
 
         // Assert
         Assert.Null(result);
@@ -37,23 +36,21 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb2")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow, null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, null, null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow, null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, null, null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetOngoingRegistration(userId, userId);
+        var result = await service.GetOngoingRegistration(user.Id, user.Id);
 
         // Assert
         Assert.NotNull(result);
@@ -65,21 +62,20 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb3")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         var nonExistentEmployeeId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetOngoingRegistration(userId, nonExistentEmployeeId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetOngoingRegistration(user.Id, nonExistentEmployeeId));
     }
 
     [Fact]
@@ -87,19 +83,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb4")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetUnsettledWorkRegistrations(userId, userId);
+        var result = await service.GetUnsettledWorkRegistrations(user.Id, user.Id);
 
         // Assert
         Assert.Empty(result);
@@ -110,23 +105,21 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb5")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow, null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow, null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetUnsettledWorkRegistrations(userId, userId);
+        var result = await service.GetUnsettledWorkRegistrations(user.Id, user.Id);
 
         // Assert
         Assert.NotEmpty(result);
@@ -139,21 +132,20 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb6")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         var nonExistentEmployeeId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUnsettledWorkRegistrations(userId, nonExistentEmployeeId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUnsettledWorkRegistrations(user.Id, nonExistentEmployeeId));
     }
 
     [Fact]
@@ -161,19 +153,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb7")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var response = await service.WorkOverviewQuery(userId, userId, true, false, false, null, null, "day", "current", "day", "none");
+        var response = await service.WorkOverviewQuery(user.Id, user.Id, true, false, false, null, null, "day", "current", "day", "none");
 
         // Assert
         Assert.NotNull(response);
@@ -185,14 +176,13 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb8")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -200,7 +190,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow;
 
         // Act
-        var response = await service.WorkOverviewQuery(userId, userId, true, false, false, startDate, endDate, "custom", "custom", "day", "none");
+        var response = await service.WorkOverviewQuery(user.Id, user.Id, true, false, false, startDate, endDate, "custom", "custom", "day", "none");
 
         // Assert
         Assert.NotNull(response);
@@ -212,14 +202,13 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb9")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -227,7 +216,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow.AddDays(-7);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.WorkOverviewQuery(userId, userId, true, false, false, startDate, endDate, "custom", "custom", "day", "none"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.WorkOverviewQuery(user.Id, user.Id, true, false, false, startDate, endDate, "custom", "custom", "day", "none"));
     }
 
     [Fact]
@@ -241,20 +230,19 @@ public class OverviewServiceTests
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var employeeId = userId;
-        context.Users.Add(TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee));
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        context.Users.Add(user);
         await context.SaveChangesAsync();
 
         var startDate = DateTimeOffset.UtcNow.AddDays(-30);
         var endDate = DateTimeOffset.UtcNow;
 
         // Act
-        var response = await service.WorkOverviewQuery(userId, employeeId, true, false, false, startDate, endDate, "custom", "custom", "day", "none");
+        var response = await service.WorkOverviewQuery(user.Id, user.Id, true, false, false, startDate, endDate, "custom", "custom", "day", "none");
 
         // Assert
         Assert.NotNull(response);
-        Assert.Contains("sort_asc=true", response.QueryString);
+        Assert.Contains("sortAsc=True", response.QueryString);
     }
 
     [Fact]
@@ -262,22 +250,22 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb16")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", "?sort_asc=false", UserRole.Employee);
+        var queryString = "sortAsc=False&showUnitsWithNoRecords=False&setDefault=False&timePeriod=year&timeMode=rolling&groupBy=client&thenBy=day";
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", queryString, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetDefaultWorkQuery(userId);
+        var result = await service.GetDefaultWorkQuery(user.Id);
 
         // Assert
-        Assert.Equal("?sort_asc=false", result);
+        Assert.Equal(queryString, result);
     }
 
     [Fact]
@@ -285,19 +273,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb17")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetDefaultWorkQuery(userId);
+        var result = await service.GetDefaultWorkQuery(user.Id);
 
         // Assert
         Assert.Equal("?sort_asc=false&show_days_no_records=false&set_default=false&start_date=null&end_date=null&time_period=week&time_mode=current&group_by=day&then_by=none", result);
@@ -308,7 +295,7 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb18")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
@@ -325,19 +312,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb19")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetUnsettledTransportationRegistrations(userId, userId);
+        var result = await service.GetUnsettledTransportationRegistrations(user.Id, user.Id);
 
         // Assert
         Assert.Empty(result);
@@ -348,23 +334,21 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb20")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow, null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow, null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetUnsettledTransportationRegistrations(userId, userId);
+        var result = await service.GetUnsettledTransportationRegistrations(user.Id, user.Id);
 
         // Assert
         Assert.NotEmpty(result);
@@ -377,21 +361,20 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb21")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         var nonExistentEmployeeId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUnsettledTransportationRegistrations(userId, nonExistentEmployeeId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUnsettledTransportationRegistrations(user.Id, nonExistentEmployeeId));
     }
 
     [Fact]
@@ -399,19 +382,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb22")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var response = await service.TransportationOverviewQuery(userId, userId, true, false, null, null, "week", "current", "day", "none");
+        var response = await service.TransportationOverviewQuery(user.Id, user.Id, true, false, null, null, "week", "current", "day", "none");
 
         // Assert
         Assert.NotNull(response);
@@ -423,14 +405,13 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb23")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -438,7 +419,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow;
 
         // Act
-        var response = await service.TransportationOverviewQuery(userId, userId, true, false, startDate, endDate, "custom", "custom", "day", "none");
+        var response = await service.TransportationOverviewQuery(user.Id, user.Id, true, false, startDate, endDate, "custom", "custom", "day", "none");
 
         // Assert
         Assert.NotNull(response);
@@ -450,14 +431,13 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb24")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -465,7 +445,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow.AddDays(-7);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TransportationOverviewQuery(userId, userId, true, false, startDate, endDate, "custom", "custom", "day", "none"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.TransportationOverviewQuery(user.Id, user.Id, true, false, startDate, endDate, "custom", "custom", "day", "none"));
     }
 
 
@@ -474,19 +454,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb10")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetUnsettledAbsenceRegistrations(userId, userId);
+        var result = await service.GetUnsettledAbsenceRegistrations(user.Id, user.Id);
 
         // Assert
         Assert.Empty(result);
@@ -497,23 +476,21 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb11")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Leave, null, DateTimeOffset.UtcNow, null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Awaiting, null, null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Leave, null, DateTimeOffset.UtcNow, null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Awaiting, null, null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.GetUnsettledAbsenceRegistrations(userId, userId);
+        var result = await service.GetUnsettledAbsenceRegistrations(user.Id, user.Id);
 
         // Assert
         Assert.NotEmpty(result);
@@ -526,21 +503,20 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb12")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         var nonExistentEmployeeId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUnsettledAbsenceRegistrations(userId, nonExistentEmployeeId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUnsettledAbsenceRegistrations(user.Id, nonExistentEmployeeId));
     }
 
     [Fact]
@@ -548,19 +524,18 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb13")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
         // Act
-        var response = await service.AbsenceOverviewQuery(userId, userId, true, false, null, null, "week", "current", "day", "none", "Leave");
+        var response = await service.AbsenceOverviewQuery(user.Id, user.Id, true, false, null, null, "week", "current", "day", "none", "Leave");
 
         // Assert
         Assert.NotNull(response);
@@ -572,14 +547,13 @@ public class OverviewServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb14")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -587,7 +561,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow;
 
         // Act
-        var response = await service.AbsenceOverviewQuery(userId, userId, true, false, startDate, endDate, "custom", "custom", "day", "none", "Sickness");
+        var response = await service.AbsenceOverviewQuery(user.Id, user.Id, true, false, startDate, endDate, "custom", "custom", "day", "none", "Sickness");
 
         // Assert
         Assert.NotNull(response);
@@ -595,18 +569,17 @@ public class OverviewServiceTests
     }
 
     [Fact]
-    public async Task AbsenceOverviewQuery_InvalidAbsenceType_ThrowsInvalidOperationException()
+    public async Task AbsenceOverviewQuery_InvalidAbsenceType_ThrowsArgumentException()
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb15")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new OverviewService(context);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
@@ -614,7 +587,7 @@ public class OverviewServiceTests
         var endDate = DateTimeOffset.UtcNow.AddDays(-7);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AbsenceOverviewQuery(userId, userId, true, false, startDate, endDate, "custom", "custom", "day", "none", "InvalidType"));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.AbsenceOverviewQuery(user.Id, user.Id, true, false, startDate, endDate, "custom", "custom", "day", "none", "InvalidType"));
     }
 
 }

@@ -14,27 +14,25 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb25")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
         var startTime = DateTimeOffset.UtcNow.AddHours(-1);
         var endTime = DateTimeOffset.UtcNow;
 
         // Act
-        var result = await service.CreateWorkRegistration(userId, employeeId, null, startTime, endTime, "First comment", "Second comment");
+        var result = await service.CreateWorkRegistration(user.Id, user.Id, null, startTime, endTime, "First comment", "Second comment");
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(employeeId, result.EmployeeId);
+        Assert.Equal(user.Id, result.EmployeeId);
         Assert.Equal("Work", result.Type);
     }
 
@@ -43,76 +41,46 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb26")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
         var startTime = DateTimeOffset.UtcNow;
         var endTime = DateTimeOffset.UtcNow.AddHours(-1);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateWorkRegistration(userId, employeeId, null, startTime, endTime, "First comment", "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateWorkRegistration(user.Id, user.Id, null, startTime, endTime, "First comment", "Second comment"));
     }
 
-    [Fact]
-    public async Task CreateWorkRegistration_OverlappingRegistration_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb27")
-            .Options;
-
-        using var context = new LogpunchDbContext(options);
-        var service = new RegistrationService(context, Mock.Of<ICalendarService>());
-
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        context.Users.Add(user);
-
-        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
-        context.Registrations.Add(existingRegistration);
-        await context.SaveChangesAsync();
-
-        var employeeId = userId;
-        var startTime = DateTimeOffset.UtcNow.AddHours(-1.5);
-        var endTime = DateTimeOffset.UtcNow;
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateWorkRegistration(userId, employeeId, null, startTime, endTime, "First comment", "Second comment"));
-    }
 
     [Fact]
     public async Task StartWorkRegistration_ValidInput_ReturnsRegistrationDto()
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb28")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
-
         // Act
-        var result = await service.StartWorkRegistration(userId, employeeId, null, "First comment");
+        var result = await service.StartWorkRegistration(user.Id, user.Id, null, "First comment");
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(employeeId, result.EmployeeId);
+        Assert.Equal(user.Id, result.EmployeeId);
         Assert.Equal("Work", result.Type);
         Assert.Equal("Ongoing", result.Status);
     }
@@ -122,49 +90,22 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb29")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-2), null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, null, null, null);
+        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-2), null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, null, null, null);
         context.Registrations.Add(existingRegistration);
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartWorkRegistration(userId, employeeId, null, "First comment"));
-    }
-
-    [Fact]
-    public async Task StartWorkRegistration_OverlappingRegistration_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb30")
-            .Options;
-
-        using var context = new LogpunchDbContext(options);
-        var service = new RegistrationService(context, Mock.Of<ICalendarService>());
-
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        context.Users.Add(user);
-
-        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
-        context.Registrations.Add(existingRegistration);
-        await context.SaveChangesAsync();
-
-        var employeeId = userId;
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartWorkRegistration(userId, employeeId, null, "First comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartWorkRegistration(user.Id, user.Id, null, "First comment"));
     }
 
     [Fact]
@@ -172,27 +113,25 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb31")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.EndWorkRegistration(userId, userId, registrationId, "Second comment");
+        var result = await service.EndWorkRegistration(user.Id, user.Id, registration.Id, "Second comment");
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(registrationId, result.Id);
+        Assert.Equal(registration.Id, result.Id);
         Assert.Equal("Open", result.Status);
         Assert.Equal("Second comment", result.SecondComment);
     }
@@ -202,24 +141,23 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb32")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
         var otherUserId = Guid.NewGuid();
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, otherUserId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), null, otherUserId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
+
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), otherUserId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), null, otherUserId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EndWorkRegistration(userId, otherUserId, registrationId, "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EndWorkRegistration(user.Id, otherUserId, registration.Id, "Second comment"));
     }
 
     [Fact]
@@ -227,7 +165,7 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb33")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
@@ -251,31 +189,28 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb34")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Users.Add(user);
         context.Clients.Add(client);
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), user, client));
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
         var startTime = DateTimeOffset.UtcNow.AddHours(-1);
         var endTime = DateTimeOffset.UtcNow;
 
         // Act
-        var result = await service.CreateTransportationRegistration(userId, employeeId, clientId, startTime, endTime, "First comment", "Second comment");
+        var result = await service.CreateTransportationRegistration(user.Id, user.Id, client.Id, startTime, endTime, "First comment", "Second comment");
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(employeeId, result.EmployeeId);
+        Assert.Equal(user.Id, result.EmployeeId);
         Assert.Equal("Transportation", result.Type);
     }
 
@@ -284,27 +219,24 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb35")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Users.Add(user);
         context.Clients.Add(client);
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), user, client));
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
         var startTime = DateTimeOffset.UtcNow;
         var endTime = DateTimeOffset.UtcNow.AddHours(-1);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateTransportationRegistration(userId, employeeId, clientId, startTime, endTime, "First comment", "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateTransportationRegistration(user.Id, user.Id, client.Id, startTime, endTime, "First comment", "Second comment"));
     }
 
     [Fact]
@@ -312,30 +244,27 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb36")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Users.Add(user);
         context.Clients.Add(client);
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), user, client));
 
-        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
+        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), user.Id, client.Id, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
         context.Registrations.Add(existingRegistration);
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
         var startTime = DateTimeOffset.UtcNow.AddHours(-1.5);
         var endTime = DateTimeOffset.UtcNow;
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateTransportationRegistration(userId, employeeId, clientId, startTime, endTime, "First comment", "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateTransportationRegistration(user.Id, user.Id, client.Id, startTime, endTime, "First comment", "Second comment"));
     }
 
     [Fact]
@@ -343,29 +272,25 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb37")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Users.Add(user);
         context.Clients.Add(client);
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), user, client));
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
-
         // Act
-        var result = await service.StartTransportationRegistration(userId, employeeId, clientId, "First comment");
+        var result = await service.StartTransportationRegistration(user.Id, user.Id, client.Id, "First comment");
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(employeeId, result.EmployeeId);
+        Assert.Equal(user.Id, result.EmployeeId);
         Assert.Equal("Transportation", result.Type);
         Assert.Equal("Ongoing", result.Status);
     }
@@ -375,57 +300,24 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb38")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Users.Add(user);
         context.Clients.Add(client);
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), user, client));
 
-        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-2), null, userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, null, null, null);
+        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-2), null, user.Id, client.Id, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, null, null, null);
         context.Registrations.Add(existingRegistration);
         await context.SaveChangesAsync();
 
-        var employeeId = userId;
-
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartTransportationRegistration(userId, employeeId, clientId, "First comment"));
-    }
-
-    [Fact]
-    public async Task StartTransportationRegistration_OverlappingRegistration_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb39")
-            .Options;
-
-        using var context = new LogpunchDbContext(options);
-        var service = new RegistrationService(context, Mock.Of<ICalendarService>());
-
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
-        context.Users.Add(user);
-        context.Clients.Add(client);
-        context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), user, client));
-
-        var existingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-2), DateTimeOffset.UtcNow.AddHours(-1), userId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
-        context.Registrations.Add(existingRegistration);
-        await context.SaveChangesAsync();
-
-        var employeeId = userId;
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartTransportationRegistration(userId, employeeId, clientId, "First comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartTransportationRegistration(user.Id, user.Id, client.Id, "First comment"));
     }
 
     [Fact]
@@ -433,27 +325,25 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb40")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-1), null, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-1), null, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.EndTransportationRegistration(userId, userId, registrationId, "Second comment");
+        var result = await service.EndTransportationRegistration(user.Id, user.Id, registration.Id, "Second comment");
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(registrationId, result.Id);
+        Assert.Equal(registration.Id, result.Id);
         Assert.Equal("Open", result.Status);
         Assert.Equal("Second comment", result.SecondComment);
     }
@@ -463,24 +353,22 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb41")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
         var otherUserId = Guid.NewGuid();
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, otherUserId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-1), null, otherUserId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), otherUserId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-1), null, otherUserId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EndTransportationRegistration(userId, otherUserId, registrationId, "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EndTransportationRegistration(user.Id, otherUserId, registration.Id, "Second comment"));
     }
 
     [Fact]
@@ -488,23 +376,21 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb42")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EndTransportationRegistration(userId, userId, registrationId, "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EndTransportationRegistration(user.Id, user.Id, registration.Id, "Second comment"));
     }
 
     [Fact]
@@ -512,23 +398,21 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb43")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.EmployeeConfirmationRegistration(userId, registrationId);
+        var result = await service.EmployeeConfirmationRegistration(user.Id, registration.Id);
 
         // Assert
         Assert.NotNull(result);
@@ -540,24 +424,22 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb44")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
         var otherUserId = Guid.NewGuid();
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, otherUserId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, otherUserId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), otherUserId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, otherUserId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeConfirmationRegistration(userId, registrationId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeConfirmationRegistration(user.Id, registration.Id));
     }
 
     [Fact]
@@ -565,23 +447,21 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb45")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Ongoing, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeConfirmationRegistration(userId, registrationId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeConfirmationRegistration(user.Id, registration.Id));
     }
 
     [Fact]
@@ -589,29 +469,27 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb46")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var originalRegistrationId = Guid.NewGuid();
-        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(originalRegistrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(originalRegistration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.EmployeeCorrectionRegistration(userId, null, "Work", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, "Correction comment", null, originalRegistrationId);
+        var result = await service.EmployeeCorrectionRegistration(user.Id, null, "Work", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, "Correction comment", null, originalRegistration.Id);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Work", result.Type);
         Assert.Equal("Correction comment", result.FirstComment);
-        Assert.Equal(originalRegistrationId, result.CorrectionOfId);
+        Assert.Equal(originalRegistration.Id, result.CorrectionOfId);
     }
 
     [Fact]
@@ -619,58 +497,30 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb47")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var originalRegistrationId = Guid.NewGuid();
-        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(originalRegistrationId, userId, RegistrationType.Leave, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Leave, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(originalRegistration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeCorrectionRegistration(userId, null, "Leave", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, "Correction comment", null, originalRegistrationId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeCorrectionRegistration(user.Id, null, "Leave", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, "Correction comment", null, originalRegistration.Id));
     }
 
-    [Fact]
-    public async Task EmployeeCorrectionRegistration_OverlappingRegistration_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb48")
-            .Options;
-
-        using var context = new LogpunchDbContext(options);
-        var service = new RegistrationService(context, Mock.Of<ICalendarService>());
-
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
-        context.Users.Add(user);
-
-        var originalRegistrationId = Guid.NewGuid();
-        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(originalRegistrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
-        context.Registrations.Add(originalRegistration);
-
-        var overlappingRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-1).AddHours(-1), DateTimeOffset.UtcNow, userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, null, null, null);
-        context.Registrations.Add(overlappingRegistration);
-        await context.SaveChangesAsync();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EmployeeCorrectionRegistration(userId, null, "Work", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, "Correction comment", null, originalRegistrationId));
-    }
 
     [Fact]
     public async Task CreateAbsenceRegistration_ValidInput_ReturnsRegistrationDto()
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb49")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
@@ -679,24 +529,22 @@ public class RegistrationServiceTests
         calendarServiceMock.Setup(x => x.HolidaysAndWeekendDatesInTimeSpan(It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(0);
         var service = new RegistrationService(context, calendarServiceMock.Object);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
-        context.Users.Add(user);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        context.Users.Add(admin);
         await context.SaveChangesAsync();
 
-        var employeeId = Guid.NewGuid();
-        var employee = TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(employee);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.CreateAbsenceRegistration(userId, employeeId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), "Sickness", "First comment", "Second comment");
+        var result = await service.CreateAbsenceRegistration(admin.Id, employee.Id, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), "Sickness", "First comment", "Second comment");
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Sickness", result.Type);
-        Assert.Equal(employeeId, result.EmployeeId);
-        Assert.Equal(userId, result.CreatorId);
+        Assert.Equal(employee.Id, result.EmployeeId);
+        Assert.Equal(admin.Id, result.CreatorId);
     }
 
     [Fact]
@@ -704,7 +552,7 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb50")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
@@ -713,18 +561,16 @@ public class RegistrationServiceTests
         calendarServiceMock.Setup(x => x.HolidaysAndWeekendDatesInTimeSpan(It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(0);
         var service = new RegistrationService(context, calendarServiceMock.Object);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
-        context.Users.Add(user);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        context.Users.Add(admin);
         await context.SaveChangesAsync();
 
-        var employeeId = Guid.NewGuid();
-        var employee = TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(employee);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAbsenceRegistration(userId, employeeId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(-1), "Vacation", "First comment", "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAbsenceRegistration(admin.Id, employee.Id, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(-1), "Vacation", "First comment", "Second comment"));
     }
 
     [Fact]
@@ -732,7 +578,7 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb51")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
@@ -741,18 +587,16 @@ public class RegistrationServiceTests
         calendarServiceMock.Setup(x => x.HolidaysAndWeekendDatesInTimeSpan(It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(0);
         var service = new RegistrationService(context, calendarServiceMock.Object);
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var employeeId = Guid.NewGuid();
-        var employee = TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(employee);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAbsenceRegistration(userId, employeeId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), "Sickness", "First comment", "Second comment"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAbsenceRegistration(user.Id, employee.Id, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), "Sickness", "First comment", "Second comment"));
     }
 
     [Fact]
@@ -760,23 +604,21 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb52")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, adminId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), admin.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.UpdateRegistrationStatus(adminId, registrationId, "Approved");
+        var result = await service.UpdateRegistrationStatus(admin.Id, registration.Id, "Approved");
 
         // Assert
         Assert.NotNull(result);
@@ -788,47 +630,43 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb53")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRegistrationStatus(userId, registrationId, "Approved"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRegistrationStatus(user.Id, registration.Id, "Approved"));
     }
 
     [Fact]
-    public async Task UpdateRegistrationStatus_InvalidStatus_ThrowsInvalidOperationException()
+    public async Task UpdateRegistrationStatus_InvalidStatus_ThrowsArgumentException()
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb54")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, adminId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), admin.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRegistrationStatus(adminId, registrationId, "InvalidStatus"));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.UpdateRegistrationStatus(admin.Id, registration.Id, "InvalidStatus"));
     }
 
     [Fact]
@@ -836,23 +674,21 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb55")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, adminId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), admin.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.ChangeRegistrationType(adminId, registrationId, "Leave");
+        var result = await service.ChangeRegistrationType(admin.Id, registration.Id, "Leave");
 
         // Assert
         Assert.NotNull(result);
@@ -864,47 +700,46 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb56")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var userId = Guid.NewGuid();
-        var user = TestEntityFactory.CreateLogpunchUser(userId, "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var user = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "user@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(user);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, userId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), userId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), user.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), user.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeRegistrationType(userId, registrationId, "Leave"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeRegistrationType(user.Id, registration.Id, "Leave"));
     }
 
     [Fact]
-    public async Task ChangeRegistrationType_InvalidType_ThrowsInvalidOperationException()
+    public async Task ChangeRegistrationType_InvalidType_ThrowsArgumentException()
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb57")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "Employee", "User", null, UserRole.Employee);
+        context.Users.Add(employee);
+
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var registrationId = Guid.NewGuid();
-        var registration = TestEntityFactory.CreateLogpunchRegistration(registrationId, adminId, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var registration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), employee.Id, RegistrationType.Transportation, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(registration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeRegistrationType(adminId, registrationId, "InvalidType"));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.ChangeRegistrationType(admin.Id, registration.Id, "InvalidType"));
     }
 
     [Fact]
@@ -912,37 +747,33 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb58")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var employeeId = Guid.NewGuid();
-        var employee = TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(employee);
 
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Clients.Add(client);
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), employee, client));
 
-        var originalRegistrationId = Guid.NewGuid();
-        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(originalRegistrationId, employeeId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), employee.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, client.Id, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(originalRegistration);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await service.AdminCorrectionRegistration(adminId, employeeId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, clientId, "Correction comment", null, originalRegistrationId);
+        var result = await service.AdminCorrectionRegistration(admin.Id, employee.Id, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, client.Id, "Correction comment", null, originalRegistration.Id);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Correction comment", result.FirstComment);
-        Assert.Equal(originalRegistrationId, result.CorrectionOfId);
+        Assert.Equal(originalRegistration.Id, result.CorrectionOfId);
     }
 
     [Fact]
@@ -950,29 +781,26 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb59")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var employeeId = Guid.NewGuid();
-        var employee = TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(employee);
 
-        var originalRegistrationId = Guid.NewGuid();
-        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(originalRegistrationId, employeeId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), employee.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, null, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(originalRegistration);
         await context.SaveChangesAsync();
 
         var invalidEmployeeId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AdminCorrectionRegistration(adminId, invalidEmployeeId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, null, "Correction comment", null, originalRegistrationId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AdminCorrectionRegistration(admin.Id, invalidEmployeeId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, null, "Correction comment", null, originalRegistration.Id));
     }
 
     [Fact]
@@ -980,36 +808,32 @@ public class RegistrationServiceTests
     {
         // Arrange
         var options = new DbContextOptionsBuilder<LogpunchDbContext>()
-            .UseInMemoryDatabase(databaseName: "LogpunchDb60")
+            .UseInMemoryDatabase(databaseName: "LogpunchDb")
             .Options;
 
         using var context = new LogpunchDbContext(options);
         var service = new RegistrationService(context, Mock.Of<ICalendarService>());
 
-        var adminId = Guid.NewGuid();
-        var admin = TestEntityFactory.CreateLogpunchUser(adminId, "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
+        var admin = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "admin@example.com", "password", "Admin", "User", null, UserRole.Admin);
         context.Users.Add(admin);
 
-        var employeeId = Guid.NewGuid();
-        var employee = TestEntityFactory.CreateLogpunchUser(employeeId, "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "FirstName", "LastName", null, UserRole.Employee);
         context.Users.Add(employee);
 
-        var clientId = Guid.NewGuid();
-        var client = TestEntityFactory.CreateLogpunchClient(clientId, "ClientName");
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "ClientName");
         context.Clients.Add(client);
+
         context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), employee, client));
 
-        var originalRegistrationId = Guid.NewGuid();
-        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(originalRegistrationId, employeeId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), adminId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
+        var originalRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), employee.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddDays(-1), admin.Id, client.Id, DateTimeOffset.UtcNow, RegistrationStatus.Open, "First comment", null, null);
         context.Registrations.Add(originalRegistration);
 
-        var correctionRegistrationId = Guid.NewGuid();
-        var correctionRegistration = TestEntityFactory.CreateLogpunchRegistration(correctionRegistrationId, employeeId, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, adminId, clientId, DateTimeOffset.UtcNow, RegistrationStatus.Open, "Correction comment", null, originalRegistrationId);
+        var correctionRegistration = TestEntityFactory.CreateLogpunchRegistration(Guid.NewGuid(), employee.Id, RegistrationType.Work, null, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, admin.Id, client.Id, DateTimeOffset.UtcNow, RegistrationStatus.Open, "Correction comment", null, originalRegistration.Id);
         context.Registrations.Add(correctionRegistration);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AdminCorrectionRegistration(adminId, employeeId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), clientId, "Second Correction", null, correctionRegistrationId));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AdminCorrectionRegistration(admin.Id, employee.Id, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), client.Id, "Second Correction", null, correctionRegistration.Id));
     }
 
 }

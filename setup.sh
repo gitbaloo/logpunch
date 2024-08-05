@@ -41,6 +41,7 @@ echo "Setting up the database..."
 change_directory "$SCRIPT_DIR/database/"
 sudo mkdir -p data/pgadmin_data
 sudo mkdir -p data/pgpassfile
+sudo mkdir -p data/pgadmin_data/sessions
 sudo chown -R 5050:5050 data/pgadmin_data
 sudo chown -R 5050:5050 data/pgpassfile
 docker compose pull
@@ -59,7 +60,7 @@ change_directory "$SCRIPT_DIR/frontend"
 docker compose build
 change_directory "$SCRIPT_DIR/"
 
-# Make other scripts executable - launch.sh, kill.sh and killandwipe.sh
+# Make other scripts executable - launch.sh, kill.sh and wipe.sh
 chmod +x launch.sh
 chmod +x kill.sh
 chmod +x wipe.sh

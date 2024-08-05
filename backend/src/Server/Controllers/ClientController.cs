@@ -23,7 +23,7 @@ namespace Logpunch.Controllers
             _loginService = loginService;
         }
 
-        [HttpGet("{employeeId}")]
+        [HttpGet("get-all")]
         public async Task<ActionResult<List<LogpunchClientDto>>> GetClients(Guid? employeeId)
         {
             var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");

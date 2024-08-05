@@ -1,25 +1,43 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import CustomerSelector from "./routes/CustomerSelector";
-import TimeRegistration from "./routes/TimeRegistration";
-import ConsultantOverview from "./routes/ConsultantOverview";
-import Login from "./routes/Login";
-import Query from "./routes/Query";
-import Home from "./routes/Home";
-
+import { Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
+import OverviewPage from "./pages/OverviewPage";
+import RegistrationPage from "./pages/RegistrationPage";
+import PrivateRoute from "./components/PrivateRoute";
+import { useAuth } from "./hooks/useAuth";
 
 const App: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="login" element={<Login />} />
-        <Route path="customer-selector" element={<CustomerSelector />} />
-        <Route path="customers/:customerId" element={<TimeRegistration />} />
-        <Route path="overview/query" element={<Query />} />
-        <Route path="overview" element={<ConsultantOverview />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/dashboard"
+        element={<PrivateRoute element={DashboardPage} />}
+      />
+      <Route
+        path="/overview"
+        element={<PrivateRoute element={OverviewPage} />}
+      />
+      <Route
+        path="/registration"
+        element={<PrivateRoute element={RegistrationPage} />}
+      />
+      <Route
+        path="/"
+        element={
+          isAuthenticated === null ? (
+            <div>Loading...</div>
+          ) : isAuthenticated ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+    </Routes>
   );
 };
 

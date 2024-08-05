@@ -11,6 +11,5 @@ namespace Domain
         public DateTime Date { get; set; }
         public string Name { get; set; } = string.Empty;
         public bool NationalHoliday { get; set; }
-
     }
 }

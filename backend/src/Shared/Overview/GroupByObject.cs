@@ -11,7 +11,7 @@ namespace Shared
         {
             Name = name;
             Total = total;
-            ThenByObjects = []; // Initialize with empty list or null based on your requirement
+            ThenByObjects = [];
         }
 
         // Constructor with ThenByObjects

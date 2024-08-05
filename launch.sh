@@ -32,10 +32,10 @@ docker compose up -d &
 BACKEND_PID=$!
 
 # Start the frontend
-# echo "Starting frontend..."
-# change_directory "$SCRIPT_DIR/frontend/"
-# docker compose up -d &
-# FRONTEND_PID=$!
+echo "Starting frontend..."
+change_directory "$SCRIPT_DIR/frontend/"
+docker compose up -d &
+FRONTEND_PID=$!
 
 # Wait for a few seconds to ensure services start properly
 sleep 10
@@ -55,4 +55,4 @@ xdg-open "http://localhost:8081/browser/"
 xdg-open "http://localhost:7206/swagger/index.html"
 
 # frontend
-# xdg-open "http://localhost:5173/"
+xdg-open "http://localhost:5173/"

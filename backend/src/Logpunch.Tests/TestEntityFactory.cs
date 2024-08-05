@@ -14,6 +14,21 @@ public static class TestEntityFactory
         return client;
     }
 
+    public static EmployeeClientRelation CreateEmployeeClientRelation(Guid id, LogpunchUser employee, LogpunchClient client)
+    {
+        var employeeClientRelation = new EmployeeClientRelation(employee, client);
+        SetProtectedProperty(employeeClientRelation, nameof(EmployeeClientRelation.Id), id);
+        return employeeClientRelation;
+    }
+
+    public static LogpunchRegistration CreateLogpunchRegistration(Guid id, Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? firstComment, string? secondComment, Guid? correctionOfId)
+    {
+        var registration = new LogpunchRegistration(employeeId, type, amount, start, end, creatorId, clientId, creationTime, status, firstComment, secondComment, correctionOfId);
+        SetProtectedProperty(registration, nameof(LogpunchRegistration.Id), id);
+        return registration;
+    }
+
+
     private static void SetProtectedProperty<T>(T obj, string propertyName, object value)
     {
         var property = typeof(T).GetProperty(propertyName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.FlattenHierarchy);

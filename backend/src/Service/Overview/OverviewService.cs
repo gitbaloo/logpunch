@@ -119,15 +119,20 @@ namespace Infrastructure
 
             if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date=null, end_date=null, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&setDefault={setDefault}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+            }
+            else if (customStartDate is not null && customEndDate is null)
+            {
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&setDefault={setDefault}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+
             }
             else if (customStartDate.HasValue && customEndDate.HasValue)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, set_default={setDefault}, start_date={customStartDate.Value.DateTime.ToShortDateString()}, end_date={customEndDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&setDefault={setDefault}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
             }
             else
             {
-                throw new InvalidOperationException($"customStartDate and customEndDate must both either be null or have value. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
+                throw new InvalidOperationException($"customStartDate must have value if custom period/mode is chosen. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
             }
 
             if (timeMode != "custom" && (customEndDate.HasValue || customStartDate.HasValue) || timePeriod != "custom" && (customEndDate.HasValue || customStartDate.HasValue))
@@ -150,8 +155,13 @@ namespace Infrastructure
             }
             else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
+                startDate = CalendarService.SetMinTimeOnDate(customStartDate.Value);
                 endDate = CalendarService.SetMaxTimeOnDate(DateTimeOffset.Now);
+            }
+            else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is not null)
+            {
+                startDate = CalendarService.SetMinTimeOnDate(customStartDate.Value);
+                endDate = CalendarService.SetMaxTimeOnDate(customEndDate.Value);
             }
             else
             {
@@ -292,15 +302,20 @@ namespace Infrastructure
 
             if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date=null, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+            }
+            else if (customStartDate is not null && customEndDate is null)
+            {
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+
             }
             else if (customStartDate.HasValue && customEndDate.HasValue)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={customStartDate.Value.DateTime.ToShortDateString()}, end_date={customEndDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
             }
             else
             {
-                throw new InvalidOperationException($"customStartDate and customEndDate must both either be null or have value. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
+                throw new InvalidOperationException($"customStartDate must have value if custom period/mode is chosen. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
             }
 
             if (timeMode != "custom" && (customEndDate.HasValue || customStartDate.HasValue) || timePeriod != "custom" && (customEndDate.HasValue || customStartDate.HasValue))
@@ -320,8 +335,13 @@ namespace Infrastructure
             }
             else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
+                startDate = CalendarService.SetMinTimeOnDate(customStartDate.Value);
                 endDate = CalendarService.SetMaxTimeOnDate(DateTimeOffset.Now);
+            }
+            else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is not null)
+            {
+                startDate = CalendarService.SetMinTimeOnDate(customStartDate.Value);
+                endDate = CalendarService.SetMaxTimeOnDate(customEndDate.Value);
             }
             else
             {
@@ -444,15 +464,20 @@ namespace Infrastructure
 
             if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date=null, end_date=null, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}, absence_type={absenceType}";
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
+            }
+            else if (customStartDate is not null && customEndDate is null)
+            {
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
+
             }
             else if (customStartDate.HasValue && customEndDate.HasValue)
             {
-                queryString = $"sort_asc={sortAsc}, show_days_no_records={showUnitsWithNoRecords}, start_date={customStartDate.Value.DateTime.ToShortDateString()}, end_date={customEndDate.Value.DateTime.ToShortDateString()}, time_period={timePeriod}, time_mode={timeMode}, groupby={groupBy}, thenby={thenBy}";
+                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
             }
             else
             {
-                throw new InvalidOperationException($"customStartDate and customEndDate must both either be null or have value. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
+                throw new InvalidOperationException($"customStartDate must have value if custom period/mode is chosen. customStartDate: {customStartDate}, customEndDate: {customEndDate}");
             }
 
             if (timeMode != "custom" && (customEndDate.HasValue || customStartDate.HasValue) || timePeriod != "custom" && (customEndDate.HasValue || customStartDate.HasValue))
@@ -472,8 +497,13 @@ namespace Infrastructure
             }
             else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is null)
             {
-                startDate = CalendarService.SetMinTimeOnDate(CalendarService.FindStartDateOfTimePeriod(customStartDate.Value, timePeriod, timeMode));
+                startDate = CalendarService.SetMinTimeOnDate(customStartDate.Value);
                 endDate = CalendarService.SetMaxTimeOnDate(DateTimeOffset.Now);
+            }
+            else if (timePeriod == "custom" && timeMode == "custom" && customStartDate is not null && customEndDate is not null)
+            {
+                startDate = CalendarService.SetMinTimeOnDate(customStartDate.Value);
+                endDate = CalendarService.SetMaxTimeOnDate(customEndDate.Value);
             }
             else
             {
@@ -613,12 +643,10 @@ namespace Infrastructure
 
         private List<ThenByObject> GetThenByObjects(IEnumerable<LogpunchRegistrationDto> group, string thenBy, string groupBy)
         {
-            // Check if thenBy is a valid time unit and is larger or equal to groupBy
             if (CalendarService.TimeUnitOrder.Contains(thenBy) && CalendarService.TimeUnitOrder.Contains(groupBy))
             {
                 if (CalendarService.TimeUnitOrder.IndexOf(thenBy) >= CalendarService.TimeUnitOrder.IndexOf(groupBy))
                 {
-                    // If thenBy is equal or larger than groupBy, adjust thenBy to be one level smaller than groupBy
                     int groupByIndex = CalendarService.TimeUnitOrder.IndexOf(groupBy);
                     thenBy = groupByIndex > 0 ? CalendarService.TimeUnitOrder[groupByIndex - 1] : groupBy;
                 }
@@ -658,6 +686,7 @@ namespace Infrastructure
         {
             var days = correctedData
                 .GroupBy(r => r.Start.Date)
+                .OrderBy(group => group.Key)
                 .Select(group => new GroupByObject(
                     group.Key.ToString("dd/MM/yyyy"),
                     group.Sum(item => item.Amount ?? 0),
@@ -884,6 +913,7 @@ namespace Infrastructure
                 return "No Client";
             }
         }
+
         private async Task<LogpunchRegistration?> GetMostRecentCorrection(Guid registrationId)
         {
             return await _dbContext.Registrations

@@ -24,8 +24,8 @@ change_directory "$SCRIPT_DIR/backend/src/Server/"
 docker compose down -v
 
 # Stop the frontend
-# echo "Stopping frontend..."
-# change_directory "$SCRIPT_DIR/frontend/"
-# docker compose down -v
+echo "Stopping frontend..."
+change_directory "$SCRIPT_DIR/frontend/"
+docker compose down -v
 
 echo "All services stopped and all volumes taken down!"

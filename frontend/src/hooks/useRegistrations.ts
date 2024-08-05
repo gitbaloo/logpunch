@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchUnsettledRegistrations } from "../services/apiService";
-import { Registration } from "../types/GenericTypes";
+import { Registration } from "../types/genericTypes";
 
 export const useRegistrations = () => {
   const [workRegistrations, setWorkRegistrations] = useState<Registration[]>(

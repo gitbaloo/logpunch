@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchClients } from "../services/apiService";
-import { Client } from "../types/GenericTypes";
+import { Client } from "../types/genericTypes";
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);

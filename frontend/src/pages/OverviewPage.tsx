@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import Calendar from "../components/Calendar";
 import TopBar from "../components/TopBar";
 import QueryParamWindow from "../components/QueryParamWindow";
-import { QueryParam } from "../types/QueryParams";
-import { OverviewQueryResponse } from "../types/OverviewResponses";
+import { QueryParam } from "../types/queryParams";
+import { OverviewQueryResponse } from "../types/overviewResponses";
 import { fetchDefaultParams, fetchOverviewData } from "../services/apiService";
 
 const OverviewPage: React.FC = () => {

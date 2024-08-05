@@ -8,12 +8,12 @@ namespace Infrastructure
     public class RegistrationService : IRegistrationService
     {
         private readonly LogpunchDbContext _dbContext;
-        private readonly ICalendarService _calenderService;
+        private readonly ICalendarService _calendarService;
 
-        public RegistrationService(LogpunchDbContext dbContext, ICalendarService calenderService)
+        public RegistrationService(LogpunchDbContext dbContext, ICalendarService calendarService)
         {
             _dbContext = dbContext;
-            _calenderService = calenderService;
+            _calendarService = calendarService;
         }
 
         // User functions
@@ -356,7 +356,7 @@ namespace Infrastructure
                 throw new InvalidOperationException("You can only make corrections of your own registrations");
             }
 
-            if (existingRegistration.Status != RegistrationStatus.Open)
+            if (existingRegistration.Status == RegistrationStatus.Ongoing || existingRegistration.Status == RegistrationStatus.Approved || existingRegistration.Status == RegistrationStatus.Settled)
             {
                 throw new InvalidOperationException($"You can only make corrections of an open registration. This registrations status is {existingRegistration.Status}");
             }
@@ -383,6 +383,7 @@ namespace Infrastructure
 
             TimeSpan timeSpan = end - start;
             int totalMinutes = (int)timeSpan.TotalMinutes;
+            existingRegistration.Status = RegistrationStatus.Open;
 
             var correctionRegistration = new LogpunchRegistration(user.Id, registrationType, totalMinutes, start, end, user.Id, client?.Id, creationTime, registrationStatus, firstComment, secondComment, existingRegistration.Id);
             await _dbContext.Registrations.AddAsync(correctionRegistration);
@@ -416,12 +417,12 @@ namespace Infrastructure
                 throw new InvalidOperationException("Start cannot be later than end");
             }
 
-            if (!await _calenderService.IsDateValid(start))
+            if (!await _calendarService.IsDateValid(start))
             {
                 throw new InvalidOperationException($"Start date was invalid - weekends and national holidays cannot count into leave, vacation or sickness");
             }
 
-            if (!await _calenderService.IsDateValid(end))
+            if (!await _calendarService.IsDateValid(end))
             {
                 throw new InvalidOperationException($"End ddate was invalid - weekends and national holidays cannot count into leave, vacation or sickness");
             }
@@ -436,7 +437,7 @@ namespace Infrastructure
                 throw new InvalidOperationException("A registration between the start and end already exist");
             }
 
-            int daysNotIncluded = await _calenderService.HolidaysAndWeekendDatesInTimeSpan(start.DateTime, end.DateTime);
+            int daysNotIncluded = await _calendarService.HolidaysAndWeekendDatesInTimeSpan(start.DateTime, end.DateTime);
             TimeSpan timeSpan = end - start;
             int totalDays = (int)timeSpan.TotalDays - daysNotIncluded;
 

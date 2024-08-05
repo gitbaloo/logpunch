@@ -53,12 +53,11 @@ change_directory "$SCRIPT_DIR/backend/"
 docker compose build
 change_directory "$SCRIPT_DIR/"
 
-
 # Navigate to the frontend directory and pull/build images
-# echo "Setting up the frontend..."
-# change_directory "$SCRIPT_DIR/frontend"
-# docker-compose build
-# change_directory "$SCRIPT_DIR/"
+echo "Setting up the frontend..."
+change_directory "$SCRIPT_DIR/frontend"
+docker compose build
+change_directory "$SCRIPT_DIR/"
 
 # Make other scripts executable - launch.sh, kill.sh and killandwipe.sh
 chmod +x launch.sh

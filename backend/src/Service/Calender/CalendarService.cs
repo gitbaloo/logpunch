@@ -50,6 +50,23 @@ namespace Infrastructure
             return combinedDates.Count;
         }
 
+        public async Task<bool> IsDateValid(DateTimeOffset date)
+        {
+            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            {
+                return false;
+            }
+
+            var nationalHolidays = await GetOnlyNationalHolidays(date.Date, date.Date);
+
+            if (nationalHolidays is null || nationalHolidays.Count == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         // Method to find holidays between to chosen dates. Method will also include holidays that are NOT national holidays (IE Xmas Eve)
         public async Task<ICollection<Holiday>?> GetHolidays(DateTime startDate, DateTime endDate)
         {
@@ -90,22 +107,7 @@ namespace Infrastructure
             return nationalHolidays;
         }
 
-        public async Task<bool> IsDateValid(DateTimeOffset date)
-        {
-            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-            {
-                return false;
-            }
 
-            var nationalHolidays = await GetOnlyNationalHolidays(date.Date, date.Date);
-
-            if (nationalHolidays is null || nationalHolidays.Count == 0)
-            {
-                return true;
-            }
-
-            return false;
-        }
 
         // Static Date and Time methods
 
@@ -354,18 +356,18 @@ namespace Infrastructure
             return weeks;
         }
 
-        public static (int Week, int Year) GetWeekYearTuple(string weekString)
+        public static (int Year, int Week) GetWeekYearTuple(string weekString)
         {
             var parts = weekString.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
             int week = int.Parse(parts[1]);
             int year = int.Parse(parts[2]);
-            return (week, year);
+            return (year, week);
         }
         public static readonly List<string> TimeUnitOrder = ["day", "week", "month", "year"];
 
         // Legacy methods
 
-        private DateTimeOffset LastValidDate(DateTimeOffset dateTime)
+        private static DateTimeOffset LastValidDate(DateTimeOffset dateTime)
         {
             if (dateTime.DayOfWeek == DayOfWeek.Sunday || dateTime.DayOfWeek == DayOfWeek.Saturday)
             {
@@ -377,7 +379,7 @@ namespace Infrastructure
             }
         }
 
-        private DateTimeOffset NextValidDate(DateTimeOffset dateTime)
+        private static DateTimeOffset NextValidDate(DateTimeOffset dateTime)
         {
             if (dateTime.DayOfWeek == DayOfWeek.Sunday || dateTime.DayOfWeek == DayOfWeek.Saturday)
             {

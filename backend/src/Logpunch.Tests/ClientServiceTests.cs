@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Infrastructure.Client;
+using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Persistence;
@@ -22,18 +22,16 @@ public class ClientServiceTests
         using var context = new LogpunchDbContext(options);
         var service = new ClientService(context);
 
-        var employeeId = Guid.NewGuid();
-        var clientId = Guid.NewGuid();
-        context.EmployeeClientRelations.Add(new EmployeeClientRelation
-        {
-            EmployeeId = employeeId,
-            ClientId = clientId,
-            Client = TestEntityFactory.CreateLogpunchClient(clientId, "Test Client")
-        });
+        var employee = TestEntityFactory.CreateLogpunchUser(Guid.NewGuid(), "employee@example.com", "password", "Employee", "User", null, UserRole.Employee);
+        var client = TestEntityFactory.CreateLogpunchClient(Guid.NewGuid(), "Test Client");
+        context.Users.Add(employee);
+        context.Clients.Add(client);
+
+        context.EmployeeClientRelations.Add(TestEntityFactory.CreateEmployeeClientRelation(Guid.NewGuid(), employee, client));
         await context.SaveChangesAsync();
 
         // Act
-        var clients = await service.GetClients(employeeId);
+        var clients = await service.GetClients(employee.Id);
 
         // Assert
         Assert.Single(clients);

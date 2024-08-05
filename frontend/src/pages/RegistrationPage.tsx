@@ -22,8 +22,8 @@ import {
   EndRegistrationRequest,
   EmployeeConfirmationRegistrationRequest,
   EmployeeCorrectionRegistrationRequest,
-} from "../types/RegistrationRequests";
-import { Registration, Client } from "../types/GenericTypes";
+} from "../types/registrationRequests";
+import { Registration, Client } from "../types/genericTypes";
 import { DateTime } from "luxon";
 
 type FormData = Partial<
@@ -128,7 +128,6 @@ const RegistrationPage: React.FC = () => {
     const startDateTime = DateTime.fromISO(`${date}T${newStartTime}`);
     const endDateTime = DateTime.fromISO(`${date}T${endTime}`);
 
-    // Ensure that the end time is at least one minute after the start time
     if (endDateTime <= startDateTime) {
       const adjustedEndDateTime = startDateTime.plus({ minutes: 1 });
       setEndTime(adjustedEndDateTime.toFormat("HH:mm"));
@@ -142,14 +141,13 @@ const RegistrationPage: React.FC = () => {
     const startDateTime = DateTime.fromISO(`${date}T${startTime}`);
     const endDateTime = DateTime.fromISO(`${date}T${newEndTime}`);
 
-    // Ensure that the end time is at least one minute after the start time
     if (endDateTime <= startDateTime) {
       const adjustedEndDateTime = startDateTime.plus({ minutes: 1 });
       setEndTime(adjustedEndDateTime.toFormat("HH:mm"));
     }
   };
 
-  // Separate function for creating a registration
+  // Create
   const handleCreateSubmit = async () => {
     try {
       const startDateTime = DateTime.fromISO(`${date}T${startTime}`).toUTC();
@@ -183,7 +181,7 @@ const RegistrationPage: React.FC = () => {
     }
   };
 
-  // Separate function for starting a registration
+  // Start
   const handleStartSubmit = async () => {
     try {
       const startData: StartRegistrationRequest = {
@@ -212,7 +210,7 @@ const RegistrationPage: React.FC = () => {
     }
   };
 
-  // Separate function for ending a registration
+  // End
   const handleEndSubmit = async () => {
     try {
       if (ongoingRegistration && ongoingRegistration.id) {
@@ -245,7 +243,7 @@ const RegistrationPage: React.FC = () => {
     }
   };
 
-  // Separate function for confirming a registration
+  // Confirm
   const handleConfirmSubmit = async () => {
     try {
       if (selectedRegistration) {
@@ -271,7 +269,7 @@ const RegistrationPage: React.FC = () => {
     }
   };
 
-  // Separate function for correcting a registration
+  // Correct
   const handleCorrectSubmit = async () => {
     try {
       if (selectedCorrectionRegistration) {

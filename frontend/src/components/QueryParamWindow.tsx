@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { QueryParam } from "../types/QueryParams";
+import { QueryParam } from "../types/queryParams";
 import useCalendar from "../hooks/useCalendar";
 
 interface QueryParamWindowProps {

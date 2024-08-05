@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
 import { authorizeLogin, authenticateUser } from "../services/apiService";
 import { useNavigate } from "react-router-dom";
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-}
+import { User } from "../types/genericTypes";
 
 export const useAuth = () => {
   const [token, setToken] = useState<string | null>(() =>

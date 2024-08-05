@@ -9,7 +9,7 @@ import {
   UpdateStatusRequest,
   ChangeTypeRequest,
   AdminCorrectionRegistrationRequest,
-} from "../types/RegistrationRequests";
+} from "../types/registrationRequests";
 
 const API_URL = "http://localhost:7206/api";
 

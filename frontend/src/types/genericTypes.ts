@@ -1,7 +1,7 @@
 type UUID = string;
 
 export interface Client {
-  id: UUID | null;
+  id: UUID;
   name: string;
 }
 
@@ -19,4 +19,12 @@ export interface Registration {
   firstComment?: Text;
   secondComment?: Text;
   correctionOfId?: UUID;
+}
+
+export interface User {
+  id: UUID;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
 }

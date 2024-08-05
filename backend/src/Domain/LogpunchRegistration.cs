@@ -43,7 +43,7 @@ namespace Domain
         [JsonIgnore]
         public LogpunchRegistration? CorrectionOf { get; set; }
 
-        public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? internalComment, string? secondInternalComment, Guid? correctionOfId)
+        public LogpunchRegistration(Guid employeeId, RegistrationType type, int? amount, DateTimeOffset start, DateTimeOffset? end, Guid creatorId, Guid? clientId, DateTimeOffset creationTime, RegistrationStatus status, string? firstComment, string? secondComment, Guid? correctionOfId)
         {
             EmployeeId = employeeId;
             Type = type;
@@ -54,8 +54,8 @@ namespace Domain
             ClientId = clientId;
             CreationTime = creationTime;
             Status = status;
-            FirstComment = internalComment;
-            SecondComment = secondInternalComment;
+            FirstComment = firstComment;
+            SecondComment = secondComment;
             CorrectionOfId = correctionOfId;
         }
         public LogpunchRegistration() { }

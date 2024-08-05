@@ -21,6 +21,7 @@ Run it with this command:
 
 This will create 'logpunch_network', create folders needed for local data, and pull and build all Docker images needed.
 After this, it will make the other scripts executable.
+pgAdmin 4 might be a bit slower to start up than the rest of the images, so don't worry if you can't connect immediately after running setup.sh
 
 ### launch.sh
 

@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SearchBar from "../components/SearchBar";
+import { Client } from "../types/genericTypes";
 import { fetchClients } from "../services/apiService";
-
-interface Client {
-  id: string;
-  name: string;
-}
 
 const Clients: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);

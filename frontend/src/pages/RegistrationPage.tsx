@@ -439,7 +439,13 @@ const RegistrationPage: React.FC = () => {
               name="Start"
               value={
                 ongoingRegistration?.start
-                  ? new Date(ongoingRegistration.start)
+                  ? new Date(
+                      new Date(ongoingRegistration.start).getTime() -
+                        new Date(
+                          ongoingRegistration.start
+                        ).getTimezoneOffset() *
+                          60000
+                    )
                       .toISOString()
                       .slice(0, 16)
                   : ""
@@ -447,6 +453,7 @@ const RegistrationPage: React.FC = () => {
               readOnly
               className="input w-full mb-2"
             />
+
             <input
               type="text"
               name="RegistrationId"

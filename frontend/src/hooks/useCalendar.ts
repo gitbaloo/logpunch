@@ -31,7 +31,40 @@ const useCalendar = () => {
     setDateTimeOffset(isoString || "");
   }, []);
 
-  return { currentDate, weekNumber, dateTimeOffset };
+  const isDifferentYear = (startDate: Date, endDate: Date): boolean => {
+    return startDate.getFullYear() !== endDate.getFullYear();
+  };
+
+  const isDifferentMonth = (startDate: Date, endDate: Date): boolean => {
+    return (
+      isDifferentYear(startDate, endDate) ||
+      startDate.getMonth() !== endDate.getMonth()
+    );
+  };
+
+  const isDifferentWeek = (startDate: Date, endDate: Date): boolean => {
+    return (
+      isDifferentMonth(startDate, endDate) ||
+      getISOWeekNumber(startDate) !== getISOWeekNumber(endDate)
+    );
+  };
+
+  const isDifferentDay = (startDate: Date, endDate: Date): boolean => {
+    return (
+      isDifferentWeek(startDate, endDate) ||
+      startDate.getDate() !== endDate.getDate()
+    );
+  };
+
+  return {
+    currentDate,
+    weekNumber,
+    dateTimeOffset,
+    isDifferentYear,
+    isDifferentMonth,
+    isDifferentWeek,
+    isDifferentDay,
+  };
 };
 
 export default useCalendar;

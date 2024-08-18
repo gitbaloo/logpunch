@@ -1,10 +1,8 @@
-// src/types/QueryParams.ts
-
-export type QueryParam = {
+export type WorkQueryParam = {
   sortAsc: boolean;
   showUnitsWithNoRecords: boolean;
   setDefault: boolean;
-  startDate: string;
+  startDate?: string;
   endDate?: string;
   timePeriod: string;
   timeMode: string;
@@ -12,16 +10,25 @@ export type QueryParam = {
   thenBy: string;
 };
 
-const defaultParams: QueryParam = {
-  sortAsc: false,
-  showUnitsWithNoRecords: false,
-  setDefault: false,
-  startDate: "",
-  endDate: "",
-  timePeriod: "week",
-  timeMode: "current",
-  groupBy: "client",
-  thenBy: "none",
+export type TransportQueryParam = {
+  sortAsc: boolean;
+  showUnitsWithNoRecords: boolean;
+  startDate?: string;
+  endDate?: string;
+  timePeriod: string;
+  timeMode: string;
+  groupBy: string;
+  thenBy: string;
 };
 
-export default defaultParams;
+export type AbsenceQueryParam = {
+  sortAsc: boolean;
+  showUnitsWithNoRecords: boolean;
+  startDate?: string;
+  endDate?: string;
+  timePeriod: string;
+  timeMode: string;
+  groupBy: string;
+  thenBy: string;
+  absenceType: string;
+};

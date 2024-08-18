@@ -30,7 +30,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ element: Element }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // or a loading spinner
+    return <div>Loading...</div>;
   }
 
   return isAuthenticated ? (

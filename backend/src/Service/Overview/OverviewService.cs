@@ -2,6 +2,7 @@ using System.Formats.Asn1;
 using System.Globalization;
 using System.Reflection.Metadata.Ecma335;
 using Domain;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using Persistence;
@@ -119,16 +120,16 @@ namespace Infrastructure
 
             if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&setDefault={setDefault}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&setDefault={FirstLetterToLower(setDefault.ToString())}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
             }
             else if (customStartDate is not null && customEndDate is null)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&setDefault={setDefault}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&setDefault={FirstLetterToLower(setDefault.ToString())}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
 
             }
             else if (customStartDate.HasValue && customEndDate.HasValue)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&setDefault={setDefault}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&setDefault={FirstLetterToLower(setDefault.ToString())}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
             }
             else
             {
@@ -236,7 +237,7 @@ namespace Infrastructure
 
             if (string.IsNullOrEmpty(defaultQuery))
             {
-                defaultQuery = "?sort_asc=false&show_days_no_records=false&set_default=false&start_date=null&end_date=null&time_period=week&time_mode=current&group_by=day&then_by=none";
+                defaultQuery = "sortAsc=false&showUnitsWithNoRecords=false&setDefault=false&timePeriod=month&timeMode=current&groupBy=week&thenBy=day";
             }
 
             return defaultQuery;
@@ -302,16 +303,16 @@ namespace Infrastructure
 
             if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
             }
             else if (customStartDate is not null && customEndDate is null)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
 
             }
             else if (customStartDate.HasValue && customEndDate.HasValue)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}";
             }
             else
             {
@@ -464,16 +465,16 @@ namespace Infrastructure
 
             if (customStartDate is null && customEndDate is null)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
             }
             else if (customStartDate is not null && customEndDate is null)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
 
             }
             else if (customStartDate.HasValue && customEndDate.HasValue)
             {
-                queryString = $"sortAsc={sortAsc}&showUnitsWithNoRecords={showUnitsWithNoRecords}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
+                queryString = $"sortAsc={FirstLetterToLower(sortAsc.ToString())}&showUnitsWithNoRecords={FirstLetterToLower(showUnitsWithNoRecords.ToString())}&startDate={customStartDate.Value.DateTime.ToShortDateString()}&endDate={customEndDate.Value.DateTime.ToShortDateString()}&timePeriod={timePeriod}&timeMode={timeMode}&groupBy={groupBy}&thenBy={thenBy}&absenceType={absenceType}";
             }
             else
             {
@@ -886,7 +887,7 @@ namespace Infrastructure
 
         private void SetDefaultQuery(string queryString, LogpunchUser user)
         {
-            string newDefaultURL = "?" + queryString.Replace(" ", "").Replace("set_default=True", "set_default=False").Replace(",", "&");
+            string newDefaultURL = queryString.Replace(" ", "").Replace("setDefault=true", "setDefault=false").Replace(",", "&");
 
             if (user is null)
             {
@@ -920,6 +921,16 @@ namespace Infrastructure
                 .Where(r => r.CorrectionOfId == registrationId)
                 .OrderByDescending(r => r.CreationTime)
                 .FirstOrDefaultAsync();
+        }
+
+        public static string FirstLetterToLower(string input)
+        {
+            if (string.IsNullOrEmpty(input) || char.IsLower(input[0]))
+            {
+                return input;
+            }
+
+            return char.ToLower(input[0]) + input.Substring(1);
         }
     }
 }

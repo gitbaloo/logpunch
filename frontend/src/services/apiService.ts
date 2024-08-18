@@ -57,17 +57,28 @@ export const fetchDefaultParams = async () => {
   return response.data;
 };
 
-export const fetchOverviewData = async (params: Record<string, string>) => {
+export const fetchOverviewData = async (
+  action: string,
+  params: Record<string, string | undefined>
+) => {
   const token = localStorage.getItem("token");
-  const queryParams = new URLSearchParams(params).toString();
-  const response = await axios.get(
-    `${API_URL}/overview/work/get-overview?${queryParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+
+  const filteredParams = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== undefined)
   );
+
+  const url = `${API_URL}/overview/${action}/get-overview`;
+
+  const queryParams = new URLSearchParams(
+    filteredParams as Record<string, string>
+  );
+
+  const response = await axios.get(`${url}?${queryParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   if (response.status !== 200) throw new Error("Failed to fetch overview data");
   return response.data;
 };

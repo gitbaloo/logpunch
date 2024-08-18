@@ -19,7 +19,7 @@ interface TimePeriodObject {
   groupByObjects: GroupByObject[];
 }
 
-export interface OverviewQueryResponse {
+export interface OverviewResponse {
   type: string;
   queryString: string;
   timeModePeriodObject: TimeModePeriodObject;

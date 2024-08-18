@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { DateTime } from "luxon";
 
-// Function to get the ISO 8601 week number
 const getISOWeekNumber = (date: Date): number => {
   const tempDate = new Date(date);
   tempDate.setHours(0, 0, 0, 0);
